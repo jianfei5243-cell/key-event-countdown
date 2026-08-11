@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>关键事件倒计时定时器</title>
+<style>
+/* ============================================
+   CSS Variables — 6 Themes
+   ============================================ */
+[data-theme="midnight"] {
+  --bg-primary: #0b0d1a;
+  --bg-secondary: #11142b;
+  --bg-card: rgba(255,255,255,0.03);
+  --bg-card-hover: rgba(255,255,255,0.06);
+  --bg-input: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.14);
+  --text-primary: #e8e8ed;
+  --text-secondary: #9ca3af;
+  --text-dim: #6b7280;
+  --accent: #6366f1;
+  --accent2: #8b5cf6;
+  --accent-glow: rgba(99,102,241,0.25);
+  --danger: #ef4444;
+  --warn: #f59e0b;
+  --safe: #22c55e;
+  --sidebar-bg: #0a0c16;
+  --glow1: rgba(99,102,241,0.10);
+  --glow2: rgba(139,92,246,0.08);
+  --ring-track: rgba(255,255,255,0.06);
+}
+[data-theme="purple"] {
+  --bg-primary: #120c1e; --bg-secondary: #1a132b;
+  --bg-card: rgba(255,255,255,0.03); --bg-card-hover: rgba(255,255,255,0.06);
+  --bg-input: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.14); --text-primary: #e8dff5;
+  --text-secondary: #b09cc7; --text-dim: #7a6b93;
+  --accent: #a855f7; --accent2: #c084fc; --accent-glow: rgba(168,85,247,0.25);
+  --danger: #f87171; --warn: #fbbf24; --safe: #4ade80;
+  --sidebar-bg: #0f0918; --glow1: rgba(168,85,247,0.10); --glow2: rgba(192,132,252,0.08);
+  --ring-track: rgba(255,255,255,0.06);
+}
+[data-theme="forest"] {
+  --bg-primary: #0a1712; --bg-secondary: #0f1f1a;
+  --bg-card: rgba(255,255,255,0.03); --bg-card-hover: rgba(255,255,255,0.06);
+  --bg-input: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.14); --text-primary: #d1f0e0;
+  --text-secondary: #86b8a0; --text-dim: #5c8a74;
+  --accent: #10b981; --accent2: #34d399; --accent-glow: rgba(16,185,129,0.25);
+  --danger: #f87171; --warn: #fbbf24; --safe: #22c55e;
+  --sidebar-bg: #07120e; --glow1: rgba(16,185,129,0.10); --glow2: rgba(52,211,153,0.08);
+  --ring-track: rgba(255,255,255,0.06);
+}
+[data-theme="sunset"] {
+  --bg-primary: #1a130e; --bg-secondary: #241a14;
+  --bg-card: rgba(255,255,255,0.04); --bg-card-hover: rgba(255,255,255,0.08);
+  --bg-input: rgba(255,255,255,0.05); --border: rgba(255,255,255,0.08);
+  --border-hover: rgba(255,255,255,0.16); --text-primary: #f5e6d8;
+  --text-secondary: #c4a88c; --text-dim: #8b7355;
+  --accent: #f97316; --accent2: #fb923c; --accent-glow: rgba(249,115,22,0.25);
+  --danger: #ef4444; --warn: #eab308; --safe: #22c55e;
+  --sidebar-bg: #14100a; --glow1: rgba(249,115,22,0.10); --glow2: rgba(251,146,60,0.08);
+  --ring-track: rgba(255,255,255,0.06);
+}
+[data-theme="ocean"] {
+  --bg-primary: #0c1929; --bg-secondary: #12223b;
+  --bg-card: rgba(255,255,255,0.03); --bg-card-hover: rgba(255,255,255,0.06);
+  --bg-input: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.14); --text-primary: #d0e4f5;
+  --text-secondary: #8bb9d9; --text-dim: #5b8aa6;
+  --accent: #0ea5e9; --accent2: #38bdf8; --accent-glow: rgba(14,165,233,0.25);
+  --danger: #f87171; --warn: #fbbf24; --safe: #4ade80;
+  --sidebar-bg: #091420; --glow1: rgba(14,165,233,0.10); --glow2: rgba(56,189,248,0.08);
+  --ring-track: rgba(255,255,255,0.06);
+}
+[data-theme="light"] {
+  --bg-primary: #f8fafc; --bg-secondary: #ffffff;
+  --bg-card: rgba(0,0,0,0.02); --bg-card-hover: rgba(0,0,0,0.04);
+  --bg-input: rgba(0,0,0,0.02); --border: rgba(0,0,0,0.06);
+  --border-hover: rgba(0,0,0,0.12); --text-primary: #1e293b;
+  --text-secondary: #64748b; --text-dim: #94a3b8;
+  --accent: #6366f1; --accent2: #8b5cf6; --accent-glow: rgba(99,102,241,0.15);
+  --danger: #ef4444; --warn: #f59e0b; --safe: #22c55e;
+  --sidebar-bg: #f1f5f9; --glow1: rgba(99,102,241,0.04); --glow2: rgba(139,92,246,0.03);
+  --ring-track: rgba(0,0,0,0.06);
+}
+
+/* ============================================
+   Base & Reset
+   ============================================ */
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.3s, color 0.3s;
+}
+body::before, body::after {
+  content: ''; position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+  transition: background 0.3s;
+}
+body::before { top: -30%; left: -10%; width: 70%; height: 70%; background: radial-gradient(ellipse, var(--glow1) 0%, transparent 70%); }
+body::after  { bottom: -20%; right: -5%; width: 60%; height: 60%; background: radial-gradient(ellipse, var(--glow2) 0%, transparent 70%); }
+
+/* ============================================
+   Layout
+   ============================================ */
+.app-layout {
+  position: relative; z-index: 1;
+  display: flex; height: 100vh;
+}
+
+/* ============================================
+   Sidebar
+   ============================================ */
+.sidebar {
+  width: 260px; min-width: 260px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 28px 16px 16px;
+  transition: background 0.3s, border 0.3s;
+  overflow-y: auto;
+}
+.sidebar-logo {
+  font-size: 1.1rem; font-weight: 750;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 8px; padding: 0 8px; user-select: none; letter-spacing: -0.01em;
+}
+.sidebar-subtitle {
+  font-size: 0.7rem; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 0 8px; margin-bottom: 24px;
+}
+.project-list {
+  flex: 1; display: flex; flex-direction: column; gap: 4px; overflow-y: auto;
+}
+.project-list-header {
+  font-size: 0.68rem; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700;
+  padding: 4px 8px 12px;
+}
+.project-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  transition: all 0.2s; font-size: 0.88rem; font-weight: 500;
+  color: var(--text-secondary); position: relative;
+}
+.project-item:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+.project-item.active { background: var(--bg-card); color: var(--text-primary); font-weight: 600; }
+.project-item.active::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px;
+  width: 3px; background: var(--accent); border-radius: 0 4px 4px 0;
+}
+.project-item .dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0;
+}
+.project-item .count {
+  margin-left: auto; font-size: 0.7rem; color: var(--text-dim);
+  background: var(--bg-input); padding: 2px 8px; border-radius: 10px;
+  min-width: 22px; text-align: center;
+}
+.add-project-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  border: 1px dashed var(--border); color: var(--text-dim);
+  font-size: 0.82rem; font-family: inherit; background: transparent;
+  width: 100%; margin-top: 8px; transition: all 0.2s;
+}
+.add-project-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--bg-card); }
+
+/* Batch mode */
+.batch-toggle-btn {
+  display: flex; align-items: center; gap: 6px; padding: 8px 12px;
+  border-radius: 8px; cursor: pointer; border: 1px solid var(--border);
+  color: var(--text-dim); font-size: 0.78rem; font-family: inherit;
+  background: transparent; width: 100%; margin-top: 8px; transition: all 0.2s;
+}
+.batch-toggle-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--bg-card); }
+.batch-toggle-btn.active { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.08); }
+
+.batch-actions { display: none; flex-direction: column; gap: 6px; margin-top: 8px; }
+.batch-actions.show { display: flex; }
+.batch-actions .batch-row { display: flex; gap: 6px; }
+.batch-actions .batch-row button { flex: 1; }
+
+.project-checkbox {
+  display: none; width: 18px; height: 18px; border-radius: 5px;
+  border: 2px solid var(--border); flex-shrink: 0; cursor: pointer;
+  align-items: center; justify-content: center; transition: all 0.15s;
+  font-size: 0.65rem; color: transparent;
+}
+.batch-mode .project-checkbox { display: flex; }
+.batch-mode .project-item .dot { display: none; }
+.project-checkbox.checked { border-color: var(--accent); background: var(--accent); color: #fff; }
+
+/* Theme picker */
+.theme-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.theme-section-label { font-size: 0.68rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700; padding: 0 8px 10px; }
+.theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 8px; }
+.theme-dot {
+  width: 100%; aspect-ratio: 1; border-radius: 50%; cursor: pointer;
+  border: 3px solid transparent; transition: all 0.2s; position: relative;
+}
+.theme-dot:hover { transform: scale(1.12); }
+.theme-dot.active { border-color: var(--text-primary); box-shadow: 0 0 0 3px var(--accent-glow); }
+.sidebar-footer { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.mini-btn {
+  display: flex; align-items: center; gap: 6px; padding: 8px 12px;
+  border-radius: 8px; cursor: pointer; border: 1px solid var(--border);
+  color: var(--text-dim); font-size: 0.78rem; font-family: inherit;
+  background: transparent; width: 100%; transition: all 0.2s;
+}
+.mini-btn:hover { border-color: var(--text-dim); color: var(--text-primary); }
+
+/* ============================================
+   Main Content
+   ============================================ */
+.main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 32px 36px 40px; }
+.empty-project {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px; color: var(--text-dim);
+}
+.empty-project .icon { font-size: 3.5rem; opacity: 0.3; margin-bottom: 8px; }
+.empty-project h2 { font-size: 1.2rem; color: var(--text-secondary); font-weight: 600; }
+
+.project-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 28px; gap: 16px; flex-wrap: wrap;
+}
+.project-title-area { flex: 1; min-width: 200px; }
+.project-title-input {
+  font-size: 1.6rem; font-weight: 700; background: transparent; border: none;
+  color: var(--text-primary); outline: none; font-family: inherit; width: 100%;
+  letter-spacing: -0.02em; border-bottom: 2px solid transparent; transition: border 0.2s; padding: 4px 0;
+}
+.project-title-input:focus { border-bottom-color: var(--accent); }
+.project-title-input::placeholder { color: var(--text-dim); }
+.project-event-count { font-size: 0.78rem; color: var(--text-dim); margin-top: 4px; }
+.project-actions { display: flex; gap: 8px; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 18px; border-radius: 10px; font-size: 0.85rem;
+  font-weight: 600; cursor: pointer; border: none; font-family: inherit;
+  transition: all 0.2s; letter-spacing: 0.01em; white-space: nowrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; box-shadow: 0 4px 16px var(--accent-glow);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px var(--accent-glow); }
+.btn-ghost { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); }
+.btn-ghost:hover { background: var(--bg-card-hover); border-color: var(--border-hover); color: var(--text-primary); }
+.btn-sm { padding: 6px 14px; font-size: 0.78rem; border-radius: 8px; }
+.btn-danger { background: transparent; border: 1px solid rgba(239,68,68,0.3); color: var(--danger); }
+.btn-danger:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.5); }
+.btn-icon {
+  width: 34px; height: 34px; border-radius: 8px; background: transparent;
+  border: 1px solid transparent; color: var(--text-dim); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; transition: all 0.2s;
+}
+.btn-icon:hover { background: var(--bg-card); border-color: var(--border); color: var(--text-primary); }
+
+/* ============================================
+   Events Grid
+   ============================================ */
+.events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+
+/* Event Card */
+.event-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px; position: relative; overflow: hidden;
+  transition: all 0.3s; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.event-card:hover {
+  border-color: var(--border-hover); background: var(--bg-card-hover);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3); transform: translateY(-2px);
+}
+.event-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 3px; transition: background 0.5s;
+}
+.event-card.urgency-safe::before { background: var(--safe); }
+.event-card.urgency-warn::before { background: var(--warn); }
+.event-card.urgency-danger::before { background: var(--danger); }
+.event-card.past::before { background: var(--text-dim); }
+
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 20px; }
+.event-name { font-size: 1.05rem; font-weight: 650; color: var(--text-primary); word-break: break-word; line-height: 1.4; flex: 1; }
+.card-actions { display: flex; gap: 2px; flex-shrink: 0; }
+
+/* Circular Progress Ring */
+.countdown-ring-wrap { display: flex; justify-content: center; margin-bottom: 18px; }
+.countdown-ring { position: relative; width: 140px; height: 140px; }
+.ring-svg { transform: rotate(-90deg); width: 140px; height: 140px; }
+.ring-track { fill: none; stroke: var(--ring-track); stroke-width: 8; }
+.ring-progress { fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease, stroke 1s; }
+.urgency-safe .ring-progress { stroke: var(--safe); }
+.urgency-warn .ring-progress { stroke: var(--warn); }
+.urgency-danger .ring-progress { stroke: var(--danger); }
+.past .ring-progress { stroke: var(--text-dim); }
+.ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.ring-center .big-num { font-size: 2rem; font-weight: 800; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.urgency-safe .big-num { color: var(--safe); }
+.urgency-warn .big-num { color: var(--warn); }
+.urgency-danger .big-num { color: var(--danger); }
+.past .big-num { color: var(--text-dim); }
+.ring-center .big-label { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+/* Split countdown */
+.countdown-split { display: flex; gap: 8px; justify-content: center; margin-bottom: 18px; }
+.countdown-unit {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 8px; text-align: center; min-width: 58px;
+  transition: background 0.3s, border 0.3s;
+}
+.countdown-num { font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.urgency-safe .countdown-num { color: var(--safe); }
+.urgency-warn .countdown-num { color: var(--warn); }
+.urgency-danger .countdown-num { color: var(--danger); }
+.past .countdown-num { color: var(--text-dim); }
+.countdown-label { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+
+.card-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-dim); flex-wrap: wrap; gap: 6px; }
+.card-footer .deadline-text { display: inline-flex; align-items: center; gap: 4px; }
+.reminder-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 20px; font-size: 0.68rem; font-weight: 600;
+  background: var(--accent-glow); color: var(--accent2); letter-spacing: 0.02em;
+}
+
+/* ============================================
+   Modal Overlays (must be OUTSIDE app-layout)
+   ============================================ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 18px; padding: 30px 32px;
+  width: 92%; max-width: 480px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+  display: flex; flex-direction: column; gap: 20px;
+  transform: translateY(16px) scale(0.98);
+  transition: transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275), background 0.3s, border 0.3s;
+}
+.modal-overlay.active .modal { transform: translateY(0) scale(1); }
+.modal h3 { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text-primary);
+  padding: 11px 14px; font-size: 0.9rem; outline: none;
+  font-family: inherit; transition: all 0.2s; resize: vertical;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.form-group textarea { min-height: 60px; }
+.form-group select {
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;
+}
+.form-group select option { background: var(--bg-secondary); color: var(--text-primary); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+
+/* ============================================
+   Toast
+   ============================================ */
+.toast {
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 28px;
+  color: var(--text-primary); font-size: 0.88rem; font-weight: 600;
+  z-index: 2000; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  pointer-events: none; transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275), background 0.3s, border 0.3s;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ============================================
+   Mini mode
+   ============================================ */
+body.mini-mode .sidebar,
+body.mini-mode .project-header .project-actions,
+body.mini-mode .card-actions { display: flex; gap: 2px; }
+body.mini-mode { background: transparent; overflow: hidden; }
+body.mini-mode::before, body.mini-mode::after { display: none; }
+body.mini-mode .main { padding: 0; }
+
+/* Mini header bar */
+.mini-header {
+  display: none;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 10;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+body.mini-mode .mini-header { display: flex; align-items: center; gap: 8px; }
+.mini-header { position: relative; }
+.mini-header .header-spacer { flex: 1; }
+.mini-header .header-title {
+  flex: 1; font-size: 0.78rem; font-weight: 600; color: var(--text-dim);
+  text-align: left; letter-spacing: 0.03em; user-select: none;
+}
+
+/* Project collapsible sections (mini mode) */
+.mini-project-section {
+  margin: 0 14px 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  background: var(--bg-card);
+}
+.mini-project-section-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; cursor: pointer;
+  background: var(--bg-card); transition: background 0.15s;
+  user-select: none;
+}
+.mini-project-section-header:hover { background: var(--bg-card-hover); }
+.mini-project-section-header .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.mini-project-section-header .name {
+  flex: 1; font-size: 0.85rem; font-weight: 600; color: var(--text-primary);
+}
+.mini-project-section-header .count {
+  font-size: 0.65rem; color: var(--text-dim);
+  background: var(--bg-input); padding: 2px 8px; border-radius: 10px;
+}
+.mini-project-section-header .arrow {
+  font-size: 0.55rem; color: var(--text-dim); transition: transform 0.2s;
+}
+.mini-project-section-header.open .arrow { transform: rotate(180deg); }
+
+.mini-project-section-body { display: none; padding: 0 10px 10px; }
+.mini-project-section-body.show { display: block; }
+.mini-project-section-body .event-card {
+  margin-bottom: 6px; padding: 10px 12px; border-radius: 10px;
+}
+.mini-project-section-body .event-card:last-child { margin-bottom: 0; }
+.mini-project-section-body .countdown-ring-wrap { display: none; }
+.mini-project-section-body .countdown-split { gap: 4px; margin-bottom: 6px; }
+.mini-project-section-body .countdown-unit { padding: 5px 4px; min-width: 40px; border-radius: 8px; }
+.mini-project-section-body .countdown-num { font-size: 1rem; }
+.mini-project-section-body .countdown-label { font-size: 0.55rem; }
+.mini-project-section-body .event-name { font-size: 0.78rem; }
+.mini-project-section-body .card-top { margin-bottom: 8px; }
+.mini-project-section-body .card-footer { font-size: 0.65rem; }
+
+.mini-empty {
+  text-align: center; padding: 10px 14px; font-size: 0.72rem; color: var(--text-dim);
+}
+.mini-header .mini-btn-icon {
+  width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-card); color: var(--text-secondary); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1rem; transition: all 0.15s; flex-shrink: 0;
+}
+.mini-header .mini-btn-icon:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--accent); }
+
+body.mini-mode .events-grid { padding: 8px 14px 14px; }
+body.mini-mode .events-grid { grid-template-columns: 1fr; gap: 8px; }
+body.mini-mode .event-card { padding: 12px 14px; border-radius: 12px; }
+body.mini-mode .countdown-ring-wrap { display: none; }
+body.mini-mode .countdown-split { gap: 4px; margin-bottom: 8px; }
+body.mini-mode .countdown-unit { padding: 6px 5px; min-width: 44px; border-radius: 8px; }
+body.mini-mode .countdown-num { font-size: 1.1rem; }
+body.mini-mode .event-name { font-size: 0.82rem; }
+body.mini-mode .project-header { margin-bottom: 12px; }
+body.mini-mode .project-title-input { font-size: 1rem; }
+body.mini-mode .card-footer { font-size: 0.65rem; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { width: 220px; min-width: 220px; }
+  .main { padding: 24px 20px 32px; }
+  .events-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .app-layout { flex-direction: column; }
+  .sidebar { width: 100%; min-width: auto; max-height: 140px; flex-direction: row; flex-wrap: wrap; padding: 12px 16px; gap: 6px; overflow-y: auto; }
+  .sidebar-logo, .sidebar-subtitle, .theme-section, .sidebar-footer { display: none; }
+  .project-list { flex-direction: row; gap: 4px; flex-wrap: wrap; }
+  .project-list-header { display: none; }
+  .project-item { padding: 6px 10px; font-size: 0.78rem; border-radius: 8px; }
+  .add-project-btn { width: auto; padding: 6px 12px; font-size: 0.78rem; margin-top: 0; }
+  .main { padding: 16px; }
+}
+</style>
+</head>
+<body data-theme="midnight">
+
+<div class="app-layout">
+  <!-- ========== SIDEBAR ========== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">⏳ 关键事件</div>
+    <div class="sidebar-subtitle">COUNTDOWN TIMER</div>
+    <div class="project-list-header">📁 项目列表</div>
+    <div class="project-list" id="projectList"></div>
+    <button class="add-project-btn" id="addProjectBtn">＋ 新建项目</button>
+
+    <button class="batch-toggle-btn" id="batchToggleBtn">☑ 批量管理</button>
+    <div class="batch-actions" id="batchActions">
+      <div class="batch-row">
+        <button class="btn btn-ghost btn-sm" id="batchSelectAllBtn">全选</button>
+        <button class="btn btn-ghost btn-sm" id="batchDeselectAllBtn">取消全选</button>
+      </div>
+      <button class="btn btn-danger btn-sm" id="batchDeleteBtn">🗑 批量删除选中项目</button>
+    </div>
+
+    <div class="theme-section">
+      <div class="theme-section-label">🎨 主题配色</div>
+      <div class="theme-grid">
+        <div class="theme-dot active" style="background:linear-gradient(135deg,#6366f1,#0b0d1a)" data-theme="midnight" title="深蓝夜空"></div>
+        <div class="theme-dot" style="background:linear-gradient(135deg,#a855f7,#120c1e)" data-theme="purple" title="紫梦星河"></div>
+        <div class="theme-dot" style="background:linear-gradient(135deg,#10b981,#0a1712)" data-theme="forest" title="翡翠深林"></div>
+        <div class="theme-dot" style="background:linear-gradient(135deg,#f97316,#1a130e)" data-theme="sunset" title="日落暖橙"></div>
+        <div class="theme-dot" style="background:linear-gradient(135deg,#0ea5e9,#0c1929)" data-theme="ocean" title="海洋蓝调"></div>
+        <div class="theme-dot" style="background:linear-gradient(135deg,#6366f1,#f8fafc)" data-theme="light" title="极简浅色"></div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="mini-btn" id="miniBtn">🪟 打开小窗口</button>
+    </div>
+  </aside>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <main class="main" id="mainContent"></main>
+</div>
+
+<!-- ========== MODALS (outside app-layout to avoid stacking context bugs) ========== -->
+
+<!-- Event Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">添加关键事件</h3>
+    <div class="form-group">
+      <label>关键事件名称</label>
+      <textarea id="eventNameInput" placeholder="输入关键事件名称（不限长度）..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>截止时间</label>
+      <input type="datetime-local" id="eventDeadlineInput">
+    </div>
+    <div class="form-group">
+      <label>提前提醒</label>
+      <select id="eventReminderInput">
+        <option value="0">不提醒</option>
+        <option value="5">提前 5 分钟</option>
+        <option value="15">提前 15 分钟</option>
+        <option value="30">提前 30 分钟</option>
+        <option value="60">提前 1 小时</option>
+        <option value="180">提前 3 小时</option>
+        <option value="720">提前 12 小时</option>
+        <option value="1440" selected>提前 1 天</option>
+        <option value="4320">提前 3 天</option>
+        <option value="10080">提前 1 周</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="modalCancelBtn">取消</button>
+      <button class="btn btn-primary btn-sm" id="modalSaveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Project Modal -->
+<div class="modal-overlay" id="projectModalOverlay">
+  <div class="modal">
+    <h3>新建项目</h3>
+    <div class="form-group">
+      <label>项目名称</label>
+      <input type="text" id="projectNameInput" placeholder="输入项目名称..." maxlength="100">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="projectModalCancelBtn">取消</button>
+      <button class="btn btn-primary btn-sm" id="projectModalCreateBtn">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================
+// DATA STORE
+// ============================================
+const STORAGE_KEY = 'countdown_timer_v2';
+const THEME_KEY = 'countdown_timer_theme';
+
+let appData = { projects: [], activeProjectId: null };
+let editingEventId = null;
+let batchMode = false;
+let selectedProjects = new Set();
+let expandedMiniSections = new Set();
+let lastSaveTime = Date.now();
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      appData.projects = d.projects || [];
+      appData.activeProjectId = d.activeProjectId || null;
+      appData.projects.forEach(p => { if (!p.events) p.events = []; });
+    }
+  } catch(e) { appData = { projects: [], activeProjectId: null }; }
+
+  if (appData.projects.length === 0) {
+    const p = { id: uid(), name: '我的项目', events: [] };
+    appData.projects.push(p);
+    appData.activeProjectId = p.id;
+  }
+  if (!appData.projects.find(p => p.id === appData.activeProjectId)) {
+    appData.activeProjectId = appData.projects[0].id;
+  }
+}
+
+function saveData() {
+  lastSaveTime = Date.now();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    projects: appData.projects,
+    activeProjectId: appData.activeProjectId,
+    _ts: lastSaveTime
+  }));
+}
+
+function getActive() { return appData.projects.find(p => p.id === appData.activeProjectId); }
+
+// ============================================
+// THEME
+// ============================================
+function setTheme(name) {
+  document.body.setAttribute('data-theme', name);
+  localStorage.setItem(THEME_KEY, name);
+  document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.theme === name));
+}
+function loadTheme() { setTheme(localStorage.getItem(THEME_KEY) || 'midnight'); }
+
+// ============================================
+// RENDER
+// ============================================
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function renderSidebar() {
+  document.getElementById('projectList').innerHTML = appData.projects.map(p => `
+    <div class="project-item${p.id === appData.activeProjectId ? ' active' : ''}" data-pid="${p.id}">
+      <div class="project-checkbox${selectedProjects.has(p.id) ? ' checked' : ''}" data-pid="${p.id}">✓</div>
+      <span class="dot"></span><span>${esc(p.name)}</span><span class="count">${p.events.length}</span>
+    </div>
+  `).join('');
+  // Toggle batch class on sidebar
+  document.querySelector('.sidebar').classList.toggle('batch-mode', batchMode);
+  document.getElementById('batchActions').classList.toggle('show', batchMode);
+  document.getElementById('addProjectBtn').style.display = batchMode ? 'none' : '';
+  document.getElementById('batchToggleBtn').classList.toggle('active', batchMode);
+  document.getElementById('batchToggleBtn').innerHTML = batchMode ? '✕ 退出批量管理' : '☑ 批量管理';
+}
+
+function renderMain() {
+  const project = getActive();
+  const main = document.getElementById('mainContent');
+  if (!project) { main.innerHTML = '<div class="empty-project"><div class="icon">📋</div><h2>选择一个项目</h2></div>'; return; }
+
+  const isMini = document.body.classList.contains('mini-mode');
+
+  if (isMini) {
+    // Mini mode: show all projects as collapsible sections
+    const allEventsHtml = appData.projects.map(p => {
+      const sectionEvents = p.events.length > 0
+        ? p.events.map(ev => card(ev)).join('')
+        : '<div class="mini-empty">暂无事件</div>';
+      const isExpanded = expandedMiniSections.has(p.id);
+      return `
+        <div class="mini-project-section">
+          <div class="mini-project-section-header${isExpanded ? ' open' : ''}" onclick="toggleMiniSection(this)" data-pid="${p.id}">
+            <span class="dot"></span>
+            <span class="name">${esc(p.name)}</span>
+            <span class="count">${p.events.length}</span>
+            <button class="mini-btn-icon" style="width:26px;height:26px;font-size:0.8rem;margin-right:6px" onclick="event.stopPropagation(); addEventToProject('${p.id}')" title="添加事件到该项目">＋</button>
+            <span class="arrow">▼</span>
+          </div>
+          <div class="mini-project-section-body${isExpanded ? ' show' : ''}">${sectionEvents}</div>
+        </div>`;
+    }).join('');
+
+    main.innerHTML = `
+      <div class="mini-header">
+        <span class="header-title">⏳ 关键事件倒计时</span>
+        <button class="mini-btn-icon" id="miniAddProjectBtn" title="添加项目">📁</button>
+      </div>
+      <div class="events-grid" style="display:block">
+        ${appData.projects.length === 0 ? '<div class="mini-empty">还没有项目，点击 📁 创建</div>' : allEventsHtml}
+      </div>
+    `;
+    return;
+  }
+
+  const projectOptions = appData.projects.map(p =>
+    `<option value="${p.id}"${p.id === project.id ? ' selected' : ''}>${esc(p.name)}</option>`
+  ).join('');
+
+  main.innerHTML = `
+    <div class="mini-header">
+      <span class="header-title">⏳ 关键事件倒计时</span>
+      <button class="mini-btn-icon" id="miniAddProjectBtn" title="添加项目">📁</button>
+      <button class="mini-btn-icon" id="miniAddEventBtn" title="添加事件">＋</button>
+      <button class="mini-btn-icon" id="miniAddProjectBtn" title="添加项目">📁</button>
+    </div>
+    <div class="project-header">
+      <div class="project-title-area">
+        <input class="project-title-input" value="${esc(project.name)}" data-pid="${project.id}" placeholder="输入项目名称...">
+        <div class="project-event-count">${project.events.length} 个关键事件</div>
+      </div>
+      <div class="project-actions">
+        <button class="btn btn-primary" id="addEventBtn">＋ 添加事件</button>
+        <button class="btn btn-ghost btn-sm" id="deleteProjectBtn" ${appData.projects.length <= 1 ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>🗑 删除项目</button>
+      </div>
+    </div>
+    <div class="events-grid" id="eventsGrid">
+      ${project.events.length === 0 ? '<div class="empty-project" style="grid-column:1/-1;padding:60px 20px;"><div class="icon">📌</div><h2>还没有关键事件</h2></div>' : project.events.map(ev => card(ev)).join('')}
+    </div>
+  `;
+}
+
+function urgency(dl) {
+  const d = new Date(dl).getTime() - Date.now();
+  if (d < 0) return 'past';
+  if (d < 3600000) return 'danger';
+  if (d < 86400000) return 'warn';
+  return 'safe';
+}
+
+function cd(deadline) {
+  const diff = new Date(deadline).getTime() - Date.now();
+  if (diff <= 0) return { days:0, hours:0, mins:0, secs:0, past:true };
+  const s = Math.floor(diff / 1000);
+  return { days: Math.floor(diff/86400000), hours: Math.floor((diff%86400000)/3600000), mins: Math.floor((diff%3600000)/60000), secs: Math.floor((diff%60000)/1000), past:false };
+}
+
+function fmtDT(iso) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function fmtRem(m) {
+  if (!m||m==0) return '不提醒';
+  if (m<60) return `提前 ${m} 分钟`;
+  if (m<1440) return `提前 ${m/60} 小时`;
+  return `提前 ${m/1440} 天`;
+}
+
+function ring(dl) {
+  const diff = new Date(dl).getTime() - Date.now();
+  const f = Math.max(0, Math.min(1, diff/(7*86400000)));
+  const c = 2*Math.PI*60;
+  return { f, offset: c*(1-f), circ: c };
+}
+
+function card(ev) {
+  const c = cd(ev.deadline);
+  const u = urgency(ev.deadline);
+  const r = ring(ev.deadline);
+  const past = c.past;
+
+  const ringH = past ? `
+    <div class="countdown-ring-wrap"><div class="countdown-ring">
+      <svg class="ring-svg" viewBox="0 0 140 140">
+        <circle class="ring-track" cx="70" cy="70" r="60"/>
+        <circle class="ring-progress" cx="70" cy="70" r="60" stroke-dasharray="${r.circ}" stroke-dashoffset="${r.circ}" opacity="0.3"/>
+      </svg>
+      <div class="ring-center"><div class="big-num" style="color:var(--text-dim)">—</div><div class="big-label">已过期</div></div>
+    </div></div>` : `
+    <div class="countdown-ring-wrap"><div class="countdown-ring">
+      <svg class="ring-svg" viewBox="0 0 140 140">
+        <circle class="ring-track" cx="70" cy="70" r="60"/>
+        <circle class="ring-progress" cx="70" cy="70" r="60" stroke-dasharray="${r.circ}" stroke-dashoffset="${r.offset}"/>
+      </svg>
+      <div class="ring-center"><div class="big-num">${c.days}</div><div class="big-label">天</div></div>
+    </div></div>`;
+
+  const split = past ? `
+    <div class="countdown-split">
+      <div class="countdown-unit"><div class="countdown-num">—</div><div class="countdown-label">天</div></div>
+      <div class="countdown-unit"><div class="countdown-num">—</div><div class="countdown-label">时</div></div>
+      <div class="countdown-unit"><div class="countdown-num">—</div><div class="countdown-label">分</div></div>
+      <div class="countdown-unit"><div class="countdown-num">—</div><div class="countdown-label">秒</div></div>
+    </div>` : `
+    <div class="countdown-split">
+      <div class="countdown-unit"><div class="countdown-num">${c.days}</div><div class="countdown-label">天</div></div>
+      <div class="countdown-unit"><div class="countdown-num">${String(c.hours).padStart(2,'0')}</div><div class="countdown-label">时</div></div>
+      <div class="countdown-unit"><div class="countdown-num">${String(c.mins).padStart(2,'0')}</div><div class="countdown-label">分</div></div>
+      <div class="countdown-unit"><div class="countdown-num">${String(c.secs).padStart(2,'0')}</div><div class="countdown-label">秒</div></div>
+    </div>`;
+
+  return `
+    <div class="event-card urgency-${u}${past?' past':''}" data-eid="${ev.id}">
+      <div class="card-top">
+        <div class="event-name">${esc(ev.name)}</div>
+        <div class="card-actions">
+          <button class="btn-icon edit-btn" data-eid="${ev.id}" title="编辑">✏️</button>
+          <button class="btn-icon del-btn" data-eid="${ev.id}" title="删除" style="color:var(--danger)">🗑</button>
+        </div>
+      </div>
+      ${ringH}${split}
+      <div class="card-footer">
+        <span class="deadline-text">📅 ${fmtDT(ev.deadline)}</span>
+        <span class="reminder-badge">🔔 ${fmtRem(ev.reminder)}</span>
+      </div>
+    </div>`;
+}
+
+function renderAll() { renderSidebar(); renderMain(); bindEvents(); }
+
+// ============================================
+// EVENT BINDING (delegation)
+// ============================================
+function bindEvents() {
+  // Sidebar project clicks
+  document.querySelectorAll('#projectList .project-item').forEach(el => {
+    el.onclick = function(e) {
+      if (batchMode) {
+        // In batch mode, clicking the project item toggles checkbox
+        toggleProjectSelect(el.dataset.pid);
+      } else {
+        switchProject(el.dataset.pid);
+      }
+    };
+  });
+  // Checkbox clicks (stop propagation to avoid double-toggle)
+  document.querySelectorAll('.project-checkbox').forEach(cb => {
+    cb.onclick = function(e) {
+      e.stopPropagation();
+      toggleProjectSelect(cb.dataset.pid);
+    };
+  });
+
+  // Add event button in main
+  const addBtn = document.getElementById('addEventBtn');
+  if (addBtn) addBtn.onclick = () => openEventModal(null);
+
+  // Delete project button
+  const delBtn = document.getElementById('deleteProjectBtn');
+  if (delBtn) delBtn.onclick = () => deleteProjectConfirm(appData.activeProjectId);
+
+  // Project title rename
+  const titleInput = document.querySelector('.project-title-input');
+  if (titleInput) {
+    titleInput.onchange = function() {
+      const pid = this.dataset.pid;
+      const project = appData.projects.find(p => p.id === pid);
+      if (project && this.value.trim()) { project.name = this.value.trim(); saveData(); renderSidebar(); }
+    };
+  }
+
+  // Event card buttons (edit/delete)
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.onclick = () => openEventModal(btn.dataset.eid);
+  });
+  document.querySelectorAll('.del-btn').forEach(btn => {
+    btn.onclick = () => deleteEvent(btn.dataset.eid);
+  });
+
+  // Mini mode buttons
+  const miniAddProject = document.getElementById('miniAddProjectBtn');
+  if (miniAddProject) miniAddProject.onclick = () => openProjectModal();
+
+  // Mini mode: re-bind event card edit/delete buttons
+  document.querySelectorAll('.mini-project-section-body .edit-btn').forEach(btn => {
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      openEventModal(btn.dataset.eid);
+    };
+  });
+  document.querySelectorAll('.mini-project-section-body .del-btn').forEach(btn => {
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      deleteEvent(btn.dataset.eid);
+    };
+  });
+}
+
+// ============================================
+// PROJECT OPS
+// ============================================
+function toggleMiniSection(header) {
+  const body = header.nextElementSibling;
+  const pid = header.dataset.pid;
+  if (!body) return;
+  const isOpen = body.classList.toggle('show');
+  header.classList.toggle('open', isOpen);
+  if (isOpen) expandedMiniSections.add(pid);
+  else expandedMiniSections.delete(pid);
+}
+
+function addEventToProject(pid) {
+  // Switch to the project, then open event modal
+  appData.activeProjectId = pid;
+  saveData();
+  openEventModal(null);
+}
+
+function switchProject(id) {
+  appData.activeProjectId = id;
+  saveData();
+  renderAll();
+}
+
+// ============================================
+// BATCH MODE
+// ============================================
+function toggleBatchMode() {
+  batchMode = !batchMode;
+  selectedProjects.clear();
+  renderAll();
+}
+
+function toggleProjectSelect(pid) {
+  if (selectedProjects.has(pid)) selectedProjects.delete(pid);
+  else selectedProjects.add(pid);
+  // Quick re-render sidebar only
+  renderSidebar();
+  bindBatchEvents();
+}
+
+function selectAllProjects() {
+  appData.projects.forEach(p => selectedProjects.add(p.id));
+  renderSidebar();
+  bindBatchEvents();
+}
+
+function deselectAllProjects() {
+  selectedProjects.clear();
+  renderSidebar();
+  bindBatchEvents();
+}
+
+function batchDeleteProjects() {
+  if (selectedProjects.size === 0) { toast('⚠️ 请先选择要删除的项目'); return; }
+  const count = selectedProjects.size;
+  const remaining = appData.projects.length - count;
+  if (remaining < 1) { toast('⚠️ 至少保留一个项目'); return; }
+
+  const names = appData.projects.filter(p => selectedProjects.has(p.id)).map(p => `「${p.name}」`).join('、');
+  if (!confirm(`确定删除以下 ${count} 个项目？\n\n${names}\n\n所有项目下的事件也会被清除。此操作不可恢复！`)) return;
+
+  appData.projects = appData.projects.filter(p => !selectedProjects.has(p.id));
+  if (selectedProjects.has(appData.activeProjectId)) {
+    appData.activeProjectId = appData.projects[0]?.id || null;
+  }
+  selectedProjects.clear();
+  batchMode = false;
+  saveData();
+  renderAll();
+  toast(`🗑 已删除 ${count} 个项目`);
+}
+
+function bindBatchEvents() {
+  document.getElementById('batchSelectAllBtn').onclick = selectAllProjects;
+  document.getElementById('batchDeselectAllBtn').onclick = deselectAllProjects;
+  document.getElementById('batchDeleteBtn').onclick = batchDeleteProjects;
+  document.getElementById('batchToggleBtn').onclick = toggleBatchMode;
+}
+function openProjectModal() {
+  document.getElementById('projectNameInput').value = '';
+  document.getElementById('projectModalOverlay').classList.add('active');
+  document.getElementById('projectNameInput').focus();
+}
+function closeProjectModal() {
+  document.getElementById('projectModalOverlay').classList.remove('active');
+}
+function confirmAddProject() {
+  const name = document.getElementById('projectNameInput').value.trim();
+  if (!name) { toast('⚠️ 请输入项目名称'); return; }
+  const project = { id: uid(), name: name, events: [] };
+  appData.projects.push(project);
+  appData.activeProjectId = project.id;
+  saveData();
+  renderAll();
+  closeProjectModal();
+  toast('✅ 项目已创建');
+}
+function renameProject(id, newName) {
+  const p = appData.projects.find(p => p.id === id);
+  if (p && newName.trim()) { p.name = newName.trim(); saveData(); renderAll(); }
+}
+function deleteProjectConfirm(id) {
+  if (appData.projects.length <= 1) { toast('⚠️ 至少保留一个项目'); return; }
+  const p = appData.projects.find(p => p.id === id);
+  if (!p) return;
+  if (confirm(`确定删除项目「${p.name}」及其中 ${p.events.length} 个事件？`)) {
+    appData.projects = appData.projects.filter(p => p.id !== id);
+    if (appData.activeProjectId === id) appData.activeProjectId = appData.projects[0]?.id || null;
+    saveData(); renderAll(); toast('🗑 项目已删除');
+  }
+}
+
+// ============================================
+// EVENT OPS
+// ============================================
+function openEventModal(eid) {
+  editingEventId = eid || null;
+  document.getElementById('modalTitle').textContent = eid ? '编辑关键事件' : '添加关键事件';
+  document.getElementById('modalSaveBtn').textContent = eid ? '更新' : '保存';
+  document.getElementById('modalOverlay').classList.add('active');
+
+  if (eid) {
+    // Search across all projects (needed for mini mode)
+    let ev = null;
+    for (const p of appData.projects) {
+      ev = p.events.find(e => e.id === eid);
+      if (ev) { appData.activeProjectId = p.id; break; }
+    }
+    if (ev) {
+      document.getElementById('eventNameInput').value = ev.name;
+      document.getElementById('eventDeadlineInput').value = ev.deadline;
+      document.getElementById('eventReminderInput').value = ev.reminder;
+    }
+  } else {
+    document.getElementById('eventNameInput').value = '';
+    const d = new Date(Date.now() + 3*86400000);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    document.getElementById('eventDeadlineInput').value = d.toISOString().slice(0,16);
+    document.getElementById('eventReminderInput').value = '1440';
+  }
+  document.getElementById('eventNameInput').focus();
+}
+function closeEventModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  editingEventId = null;
+}
+function saveEvent() {
+  // When editing, find the correct project (needed for mini mode)
+  let project = getActive();
+  if (!project) return;
+
+  if (editingEventId) {
+    for (const p of appData.projects) {
+      if (p.events.find(e => e.id === editingEventId)) { project = p; break; }
+    }
+  }
+  const name = document.getElementById('eventNameInput').value.trim();
+  const deadline = document.getElementById('eventDeadlineInput').value;
+  const reminder = parseInt(document.getElementById('eventReminderInput').value);
+  if (!name) { toast('⚠️ 请输入事件名称'); return; }
+  if (!deadline) { toast('⚠️ 请选择截止时间'); return; }
+
+  if (editingEventId) {
+    const ev = project.events.find(e => e.id === editingEventId);
+    if (ev) { ev.name = name; ev.deadline = deadline; ev.reminder = reminder; }
+  } else {
+    project.events.push({ id: uid(), name, deadline, reminder });
+  }
+  project.events.sort((a,b) => new Date(a.deadline) - new Date(b.deadline));
+  saveData(); renderAll(); closeEventModal();
+  toast(editingEventId ? '✅ 事件已更新' : '✅ 事件已添加');
+}
+function deleteEvent(id) {
+  // Search across all projects (needed for mini mode)
+  let project = null;
+  for (const p of appData.projects) {
+    if (p.events.find(e => e.id === id)) { project = p; break; }
+  }
+  if (!project) return;
+  const ev = project.events.find(e => e.id === id);
+  if (ev && confirm(`确定删除「${ev.name}」？`)) {
+    project.events = project.events.filter(e => e.id !== id);
+    saveData(); renderAll(); toast('🗑 事件已删除');
+  }
+}
+
+// ============================================
+// MINI WINDOW
+// ============================================
+function openMini() {
+  const w = window.open(location.href+'?mini=1','countdown_mini','width=400,height=620,left='+(screen.width-420)+',top=30,resizable,scrollbars');
+  if (!w||w.closed) toast('⚠️ 请允许弹窗后重试');
+}
+if (new URLSearchParams(location.search).has('mini')) {
+  document.body.classList.add('mini-mode');
+  document.title = '⏳ 倒计时';
+}
+
+// ============================================
+// TOAST
+// ============================================
+let tmr;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(tmr); tmr = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ============================================
+// REMINDER CHECK
+// ============================================
+let notified = {};
+function checkReminders() {
+  if (document.body.classList.contains('mini-mode')) return;
+  const now = Date.now();
+  appData.projects.forEach(proj => {
+    proj.events.forEach(ev => {
+      const dt = new Date(ev.deadline).getTime();
+      const rt = dt - ev.reminder*60000;
+
+      if (now >= rt && now < rt+60000 && !notified[ev.id+'-r']) {
+        notified[ev.id+'-r'] = true;
+        const c = cd(ev.deadline);
+        const msg = c.past ? `「${ev.name}」已过期` : `「${ev.name}」还剩 ${c.days}天${c.hours}时${c.mins}分`;
+        if (Notification.permission === 'granted') new Notification('⏰ 事件提醒', {body:msg});
+        toast('⏰ '+msg);
+      }
+      if (now >= dt && now < dt+60000 && !notified[ev.id+'-d']) {
+        notified[ev.id+'-d'] = true;
+        if (Notification.permission === 'granted') new Notification('🔴 事件截止', {body:`「${ev.name}」已截止！`});
+      }
+      if (now < rt-120000) delete notified[ev.id+'-r'];
+      if (now < dt-120000) delete notified[ev.id+'-d'];
+    });
+  });
+}
+
+// ============================================
+// INIT EVENT LISTENERS
+// ============================================
+document.getElementById('addProjectBtn').onclick = openProjectModal;
+document.getElementById('miniBtn').onclick = openMini;
+
+// Project modal
+document.getElementById('projectModalCancelBtn').onclick = closeProjectModal;
+document.getElementById('projectModalCreateBtn').onclick = confirmAddProject;
+document.getElementById('projectModalOverlay').onclick = function(e) { if (e.target===this) closeProjectModal(); };
+document.getElementById('projectNameInput').onkeydown = function(e) { if (e.key==='Enter') confirmAddProject(); };
+
+// Event modal
+document.getElementById('modalCancelBtn').onclick = closeEventModal;
+document.getElementById('modalSaveBtn').onclick = saveEvent;
+document.getElementById('modalOverlay').onclick = function(e) { if (e.target===this) closeEventModal(); };
+
+// Theme dots
+document.querySelectorAll('.theme-dot').forEach(dot => {
+  dot.onclick = function() { setTheme(this.dataset.theme); };
+});
+
+// Global keyboard
+document.onkeydown = function(e) {
+  if (e.key === 'Escape') {
+    if (document.getElementById('projectModalOverlay').classList.contains('active')) closeProjectModal();
+    else closeEventModal();
+  }
+  if ((e.ctrlKey||e.metaKey) && e.key==='n') { e.preventDefault(); openEventModal(null); }
+};
+
+// Notification permission
+setTimeout(() => { if (Notification.permission==='default') Notification.requestPermission(); }, 3000);
+
+// ============================================
+// START
+// ============================================
+loadTheme();
+loadData();
+renderAll();
+bindBatchEvents();
+
+// Cross-window sync: listen for storage changes from mini/main window
+window.addEventListener('storage', function(e) {
+  if (e.key === STORAGE_KEY && e.newValue) {
+    try {
+      const d = JSON.parse(e.newValue);
+      const remoteTs = d._ts || 0;
+      // Only reload if the change came from another window (newer timestamp)
+      if (remoteTs > lastSaveTime + 500) {
+        loadData();
+        renderAll();
+        bindBatchEvents();
+      }
+    } catch(ex) {}
+  }
+});
+
+// Periodic refresh
+setInterval(() => {
+  renderMain();
+  bindEvents();
+  checkReminders();
+}, 1000);
+
+console.log('✅ Countdown timer initialized. Projects:', appData.projects.length, 'Active:', appData.activeProjectId);
+</script>
+</body>
+</html>
