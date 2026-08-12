@@ -85,6 +85,119 @@
   --sidebar-bg: #f1f5f9; --glow1: rgba(99,102,241,0.04); --glow2: rgba(139,92,246,0.03);
   --ring-track: rgba(0,0,0,0.06);
 }
+[data-theme="cyberpunk"] {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #0f0f1a;
+  --bg-card: rgba(0, 240, 255, 0.04);
+  --bg-card-hover: rgba(0, 240, 255, 0.08);
+  --bg-input: rgba(0, 240, 255, 0.05);
+  --border: rgba(0, 240, 255, 0.12);
+  --border-hover: rgba(0, 240, 255, 0.30);
+  --text-primary: #d4f4ff;
+  --text-secondary: #7ec8e3;
+  --text-dim: #3a7a94;
+  --accent: #00f0ff;
+  --accent2: #ff00ff;
+  --accent-glow: rgba(0, 240, 255, 0.30);
+  --danger: #ff3366;
+  --warn: #ffe600;
+  --safe: #00ff88;
+  --sidebar-bg: #06060d;
+  --glow1: rgba(0, 240, 255, 0.08);
+  --glow2: rgba(255, 0, 255, 0.06);
+  --ring-track: rgba(0, 240, 255, 0.08);
+}
+
+/* Cyberpunk scanline overlay */
+[data-theme="cyberpunk"] body::after {
+  content: '';
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none; z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
+  );
+}
+
+/* Cyberpunk neon glow effects */
+[data-theme="cyberpunk"] .sidebar-logo {
+  text-shadow: 0 0 10px var(--accent), 0 0 30px var(--accent), 0 0 50px var(--accent2);
+  animation: cyber-pulse 2s ease-in-out infinite;
+}
+[data-theme="cyberpunk"] .project-item.active::before {
+  box-shadow: 0 0 8px var(--accent), 0 0 16px var(--accent);
+}
+[data-theme="cyberpunk"] .project-item.active {
+  box-shadow: inset 0 0 20px rgba(0,240,255,0.05);
+}
+[data-theme="cyberpunk"] .btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow), 0 0 24px rgba(255,0,255,0.15);
+}
+[data-theme="cyberpunk"] .btn-primary:hover {
+  box-shadow: 0 0 20px var(--accent), 0 0 40px rgba(255,0,255,0.25);
+  transform: translateY(-1px);
+}
+[data-theme="cyberpunk"] .btn-danger {
+  box-shadow: 0 0 10px rgba(255,51,102,0.2);
+}
+[data-theme="cyberpunk"] .event-card {
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+}
+[data-theme="cyberpunk"] .event-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 15px var(--accent-glow), inset 0 0 20px rgba(0,240,255,0.03);
+}
+[data-theme="cyberpunk"] .event-card.past {
+  border-color: rgba(255,51,102,0.3);
+  box-shadow: inset 0 0 20px rgba(255,51,102,0.05);
+}
+[data-theme="cyberpunk"] .countdown-unit {
+  border: 1px solid var(--border);
+  box-shadow: 0 0 6px rgba(0,240,255,0.10);
+}
+[data-theme="cyberpunk"] .countdown-num {
+  text-shadow: 0 0 8px var(--accent);
+}
+[data-theme="cyberpunk"] .project-title-input {
+  text-shadow: 0 0 6px rgba(0,240,255,0.2);
+}
+[data-theme="cyberpunk"] .project-title-input:focus {
+  border-bottom-color: var(--accent);
+  box-shadow: 0 2px 8px var(--accent-glow);
+}
+[data-theme="cyberpunk"] .modal {
+  border: 1px solid rgba(0,240,255,0.2);
+  box-shadow: 0 0 30px rgba(0,240,255,0.1), 0 0 60px rgba(255,0,255,0.05);
+}
+[data-theme="cyberpunk"] textarea:focus, [data-theme="cyberpunk"] input:focus, [data-theme="cyberpunk"] select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+[data-theme="cyberpunk"] .mini-btn:hover, [data-theme="cyberpunk"] .mini-btn-icon:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+[data-theme="cyberpunk"] .toast {
+  background: linear-gradient(135deg, rgba(0,240,255,0.15), rgba(255,0,255,0.10));
+  border: 1px solid rgba(0,240,255,0.3);
+  box-shadow: 0 0 20px rgba(0,240,255,0.15);
+}
+[data-theme="cyberpunk"] .add-project-btn:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+[data-theme="cyberpunk"] .sidebar {
+  border-right: 1px solid rgba(0,240,255,0.08);
+}
+
+@keyframes cyber-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
 
 /* ============================================
    Base & Reset
@@ -587,6 +700,7 @@ body.mini-mode .card-footer { font-size: 0.65rem; }
         <div class="theme-dot" style="background:linear-gradient(135deg,#f97316,#1a130e)" data-theme="sunset" title="日落暖橙"></div>
         <div class="theme-dot" style="background:linear-gradient(135deg,#0ea5e9,#0c1929)" data-theme="ocean" title="海洋蓝调"></div>
         <div class="theme-dot" style="background:linear-gradient(135deg,#6366f1,#f8fafc)" data-theme="light" title="极简浅色"></div>
+        <div class="theme-dot" style="background:linear-gradient(135deg,#00f0ff,#ff00ff)" data-theme="cyberpunk" title="赛博朋克"></div>
       </div>
     </div>
 
