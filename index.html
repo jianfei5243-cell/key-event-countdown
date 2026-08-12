@@ -494,6 +494,18 @@ body.mini-mode .project-header { margin-bottom: 12px; }
 body.mini-mode .project-title-input { font-size: 1rem; }
 body.mini-mode .card-footer { font-size: 0.65rem; }
 
+/* Share mode banner */
+.share-banner {
+  display: none;
+  padding: 10px 16px; margin: 0 0 16px;
+  background: var(--accent-glow); border: 1px solid var(--accent);
+  border-radius: 10px; font-size: 0.8rem; color: var(--text-primary);
+  text-align: center; line-height: 1.5;
+}
+.share-banner.show { display: block; }
+.share-banner strong { color: var(--accent2); }
+.share-banner a { color: var(--accent2); text-decoration: underline; cursor: pointer; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -552,6 +564,7 @@ body.mini-mode .card-footer { font-size: 0.65rem; }
 
     <div class="sidebar-footer">
       <button class="mini-btn" id="miniBtn">🪟 打开小窗口</button>
+      <button class="mini-btn" id="shareBtn">🔗 复制分享链接</button>
     </div>
   </aside>
 
@@ -651,6 +664,7 @@ function loadData() {
 }
 
 function saveData() {
+  if (isShareMode) return; // Don't persist in share mode
   lastSaveTime = Date.now();
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     projects: appData.projects,
@@ -934,6 +948,27 @@ function addEventToProject(pid) {
   openEventModal(null);
 }
 
+function generateShareUrl() {
+  const data = { projects: appData.projects, activeProjectId: appData.activeProjectId };
+  const json = JSON.stringify(data);
+  const compressed = btoa(unescape(encodeURIComponent(json)));
+  const base = window.location.origin + window.location.pathname;
+  return base + '#share=' + compressed;
+}
+
+function copyShareLink() {
+  const url = generateShareUrl();
+  try {
+    navigator.clipboard.writeText(url).then(() => {
+      toast('✅ 分享链接已复制到剪贴板');
+    }).catch(() => {
+      prompt('请手动复制以下链接：', url);
+    });
+  } catch(e) {
+    prompt('请手动复制以下链接：', url);
+  }
+}
+
 function switchProject(id) {
   appData.activeProjectId = id;
   saveData();
@@ -1159,6 +1194,7 @@ function checkReminders() {
 // ============================================
 document.getElementById('addProjectBtn').onclick = openProjectModal;
 document.getElementById('miniBtn').onclick = openMini;
+document.getElementById('shareBtn').onclick = copyShareLink;
 
 // Project modal
 document.getElementById('projectModalCancelBtn').onclick = closeProjectModal;
