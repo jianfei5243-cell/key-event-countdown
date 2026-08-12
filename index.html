@@ -317,6 +317,99 @@ body::after  { bottom: -20%; right: -5%; width: 60%; height: 60%; background: ra
 .batch-actions.show { display: flex; }
 .batch-actions .batch-row { display: flex; gap: 6px; }
 .batch-actions .batch-row button { flex: 1; }
+/* Firebase Login Overlay */
+.auth-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000;
+  background: var(--bg-primary);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 24px;
+}
+.auth-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 20px; padding: 40px 36px;
+  width: 100%; max-width: 400px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+}
+.auth-card h2 {
+  font-size: 1.5rem; font-weight: 700; margin-bottom: 6px;
+  color: var(--text-primary); text-align: center;
+}
+.auth-card .sub {
+  font-size: 0.82rem; color: var(--text-dim); margin-bottom: 28px;
+  text-align: center;
+}
+.auth-phone-row {
+  display: flex; gap: 8px; margin-bottom: 16px;
+}
+.auth-country {
+  width: 90px; padding: 12px 10px; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--bg-input);
+  color: var(--text-primary); font-size: 0.9rem; text-align: center;
+  font-family: inherit;
+}
+.auth-phone {
+  flex: 1; padding: 12px 14px; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--bg-input);
+  color: var(--text-primary); font-size: 0.95rem; font-family: inherit;
+}
+.auth-phone:focus, .auth-country:focus {
+  border-color: var(--accent); outline: none;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+.auth-otp-row {
+  display: flex; gap: 6px; justify-content: center; margin-bottom: 20px;
+}
+.auth-otp-input {
+  width: 44px; height: 52px; text-align: center; font-size: 1.2rem;
+  border-radius: 12px; border: 1px solid var(--border);
+  background: var(--bg-input); color: var(--text-primary);
+  font-family: monospace; font-weight: 700;
+}
+.auth-otp-input:focus {
+  border-color: var(--accent); outline: none;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+.auth-btn {
+  width: 100%; padding: 14px; border-radius: 14px;
+  border: none; font-size: 1rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; font-family: inherit;
+  color: #fff; background: var(--accent);
+}
+.auth-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.auth-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.auth-step { display: none; }
+.auth-step.active { display: block; }
+.auth-error { color: var(--danger); font-size: 0.78rem; text-align: center; margin-top: 12px; min-height: 20px; }
+.auth-back {
+  background: none; border: none; color: var(--accent); font-size: 0.82rem;
+  cursor: pointer; padding: 0; font-family: inherit; margin-bottom: 12px;
+}
+.auth-back:hover { text-decoration: underline; }
+
+/* User info in sidebar */
+.sidebar-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; margin-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 0.78rem; color: var(--text-secondary);
+}
+.sidebar-user .avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--accent-glow); display: flex;
+  align-items: center; justify-content: center;
+  font-size: 0.9rem; flex-shrink: 0;
+}
+.sidebar-user .info { flex: 1; min-width: 0; }
+.sidebar-user .phone-num { font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-user .status { font-size: 0.65rem; color: var(--safe); }
+.logout-btn {
+  background: none; border: 1px solid var(--border); color: var(--text-dim);
+  padding: 4px 10px; border-radius: 8px; cursor: pointer;
+  font-size: 0.7rem; font-family: inherit; transition: all 0.15s;
+}
+.logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
 
 .project-checkbox {
   display: none; width: 18px; height: 18px; border-radius: 5px;
@@ -662,9 +755,237 @@ body.mini-mode .card-footer { font-size: 0.65rem; }
   .add-project-btn { width: auto; padding: 6px 12px; font-size: 0.78rem; margin-top: 0; }
   .main { padding: 16px; }
 }
-</style>
+</style><script>
+// ============================================
+// FIREBASE CONFIG — 请替换为你自己的 Firebase 配置
+// 1. 打开 https://console.firebase.google.com/
+// 2. 创建项目 → 开启 Authentication 的"手机号"登录
+// 3. 创建 Firestore Database
+// 4. 在项目设置中复制配置
+// ============================================
+const firebaseConfig = {
+  apiKey: "REPLACE_WITH_YOUR_API_KEY",
+  authDomain: "REPLACE_WITH_YOUR_PROJECT.firebaseapp.com",
+  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
+  storageBucket: "REPLACE_WITH_YOUR_PROJECT.appspot.com",
+  messagingSenderId: "REPLACE_WITH_YOUR_SENDER_ID",
+  appId: "REPLACE_WITH_YOUR_APP_ID"
+};
+
+try {
+  firebase.initializeApp(firebaseConfig);
+  window._fbReady = true;
+  window._fbAuth = firebase.auth();
+  window._fbDB = firebase.firestore();
+} catch(e) {
+  window._fbReady = false;
+  console.warn('Firebase 未配置，使用本地模式。请替换 firebaseConfig。');
+}
+
+// Check if already logged in
+window._fbAuth && window._fbAuth.onAuthStateChanged(function(user) {
+  if (user) {
+    document.getElementById('authOverlay').style.display = 'none';
+    updateSidebarUser(user);
+    loadCloudData();
+  } else {
+    document.getElementById('authOverlay').style.display = 'flex';
+    document.getElementById('sidebarStatus').textContent = '本地模式';
+  }
+});
+
+// Phone auth — Step 1: Send OTP
+window._appVerifier = null;
+document.getElementById('authSendBtn').onclick = function() {
+  var phone = document.getElementById('authCountry').value + document.getElementById('authPhone').value.trim();
+  var errEl = document.getElementById('authError');
+  if (!document.getElementById('authPhone').value.trim()) { errEl.textContent = '请输入手机号码'; return; }
+  
+  if (!window._fbReady) {
+    errEl.textContent = 'Firebase 未配置，请先设置 Firebase 项目';
+    return;
+  }
+  
+  var btn = document.getElementById('authSendBtn');
+  btn.disabled = true; btn.textContent = '发送中...'; errEl.textContent = '';
+  
+  // Create invisible reCAPTCHA
+  if (!window._appVerifier) {
+    window._appVerifier = new firebase.auth.RecaptchaVerifier('firebase-recaptcha', { size: 'invisible' });
+  }
+  
+  window._fbAuth.signInWithPhoneNumber(phone, window._appVerifier).then(function(result) {
+    window._confirmResult = result;
+    document.getElementById('authStepPhone').classList.remove('active');
+    document.getElementById('authStepOTP').classList.add('active');
+    document.getElementById('authPhoneDisplay').textContent = phone;
+    btn.disabled = false; btn.textContent = '发送验证码';
+    // Focus first OTP input
+    var otpInputs = document.querySelectorAll('.auth-otp-input');
+    if (otpInputs[0]) otpInputs[0].focus();
+  }).catch(function(err) {
+    btn.disabled = false; btn.textContent = '发送验证码';
+    errEl.textContent = '发送失败: ' + err.message;
+  });
+};
+
+// OTP input auto-focus
+document.querySelectorAll('.auth-otp-input').forEach(function(input, idx, inputs) {
+  input.oninput = function() {
+    this.value = this.value.replace(/[^0-9]/g, '');
+    if (this.value && idx < inputs.length - 1) inputs[idx + 1].focus();
+  };
+  input.onkeydown = function(e) {
+    if (e.key === 'Backspace' && !this.value && idx > 0) inputs[idx - 1].focus();
+  };
+});
+
+// Back button
+document.getElementById('authBackBtn').onclick = function() {
+  document.getElementById('authStepOTP').classList.remove('active');
+  document.getElementById('authStepPhone').classList.add('active');
+  document.getElementById('authError').textContent = '';
+};
+
+// Step 2: Verify OTP
+document.getElementById('authVerifyBtn').onclick = function() {
+  var code = '';
+  document.querySelectorAll('.auth-otp-input').forEach(function(input) { code += input.value; });
+  var errEl = document.getElementById('authError2');
+  if (code.length < 6) { errEl.textContent = '请输入完整的6位验证码'; return; }
+  
+  if (!window._confirmResult) { errEl.textContent = '会话已过期，请重新发送验证码'; return; }
+  
+  var btn = document.getElementById('authVerifyBtn');
+  btn.disabled = true; btn.textContent = '验证中...'; errEl.textContent = '';
+  
+  window._confirmResult.confirm(code).then(function(result) {
+    // Success — Firebase will trigger onAuthStateChanged
+  }).catch(function(err) {
+    btn.disabled = false; btn.textContent = '验证登录';
+    errEl.textContent = '验证失败: ' + err.message;
+  });
+};
+
+function updateSidebarUser(user) {
+  var phoneEl = document.getElementById('sidebarPhone');
+  var statusEl = document.getElementById('sidebarStatus');
+  var logoutBtn = document.getElementById('logoutBtn');
+  if (user && user.phoneNumber) {
+    phoneEl.textContent = user.phoneNumber;
+    statusEl.textContent = '已登录 · 云端同步';
+    statusEl.style.color = 'var(--safe)';
+    logoutBtn.style.display = '';
+  } else {
+    phoneEl.textContent = '未登录';
+    statusEl.textContent = '本地模式';
+    statusEl.style.color = 'var(--text-dim)';
+    logoutBtn.style.display = 'none';
+  }
+}
+
+document.getElementById('logoutBtn').onclick = function() {
+  if (window._fbAuth) {
+    window._fbAuth.signOut().then(function() {
+      document.getElementById('authOverlay').style.display = 'flex';
+      document.getElementById('authStepPhone').classList.add('active');
+      document.getElementById('authStepOTP').classList.remove('active');
+    });
+  }
+};
+
+// ============================================
+// FIRESTORE SYNC
+// ============================================
+function syncToCloud() {
+  if (!window._fbDB || !window._fbAuth || !window._fbAuth.currentUser) return;
+  var user = window._fbAuth.currentUser;
+  window._fbDB.collection('countdown_data').doc(user.uid).set({
+    data: JSON.stringify(appData),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true }).catch(function() {});
+}
+
+function loadCloudData() {
+  if (!window._fbDB || !window._fbAuth || !window._fbAuth.currentUser) return;
+  var user = window._fbAuth.currentUser;
+  window._fbDB.collection('countdown_data').doc(user.uid).get().then(function(doc) {
+    if (doc.exists && doc.data().data) {
+      var d = JSON.parse(doc.data().data);
+      if (d.projects && Array.isArray(d.projects)) {
+        appData.projects = d.projects;
+        appData.activeProjectId = d.activeProjectId || null;
+        appData.projects.forEach(function(p) { if (!p.events) p.events = []; });
+        if (!appData.projects.find(function(p) { return p.id === appData.activeProjectId; })) {
+          appData.activeProjectId = appData.projects[0] ? appData.projects[0].id : null;
+        }
+        saveData(); // Also save to local
+        renderAll();
+        bindBatchEvents();
+      }
+    }
+  }).catch(function() {});
+}
+
+// Override saveData to also sync to cloud
+var _origSaveData = saveData;
+saveData = function() {
+  _origSaveData();
+  syncToCloud();
+};
+</script>
+
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body data-theme="midnight">
+
+<!-- Firebase Auth Overlay -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <!-- Step 1: Phone -->
+    <div class="auth-step active" id="authStepPhone">
+      <h2>🔐 手机号登录</h2>
+      <p class="sub">绑定手机号后可云端同步您的项目数据</p>
+      <div id="firebase-recaptcha"></div>
+      <div class="auth-phone-row">
+        <select class="auth-country" id="authCountry">
+          <option value="+86">🇨🇳 +86</option>
+          <option value="+1">🇺🇸 +1</option>
+          <option value="+81">🇯🇵 +81</option>
+          <option value="+82">🇰🇷 +82</option>
+          <option value="+65">🇸🇬 +65</option>
+          <option value="+852">🇭🇰 +852</option>
+          <option value="+853">🇲🇴 +853</option>
+          <option value="+886">🇹🇼 +886</option>
+        </select>
+        <input type="tel" class="auth-phone" id="authPhone" placeholder="手机号码" maxlength="15">
+      </div>
+      <button class="auth-btn" id="authSendBtn">发送验证码</button>
+      <div class="auth-error" id="authError"></div>
+    </div>
+    <!-- Step 2: OTP -->
+    <div class="auth-step" id="authStepOTP">
+      <button class="auth-back" id="authBackBtn">← 返回修改手机号</button>
+      <h2>📱 输入验证码</h2>
+      <p class="sub">验证码已发送至 <strong id="authPhoneDisplay"></strong></p>
+      <div class="auth-otp-row">
+        <input type="text" class="auth-otp-input" maxlength="1" data-index="0" inputmode="numeric" pattern="[0-9]">
+        <input type="text" class="auth-otp-input" maxlength="1" data-index="1" inputmode="numeric" pattern="[0-9]">
+        <input type="text" class="auth-otp-input" maxlength="1" data-index="2" inputmode="numeric" pattern="[0-9]">
+        <input type="text" class="auth-otp-input" maxlength="1" data-index="3" inputmode="numeric" pattern="[0-9]">
+        <input type="text" class="auth-otp-input" maxlength="1" data-index="4" inputmode="numeric" pattern="[0-9]">
+        <input type="text" class="auth-otp-input" maxlength="1" data-index="5" inputmode="numeric" pattern="[0-9]">
+      </div>
+      <button class="auth-btn" id="authVerifyBtn">验证登录</button>
+      <div class="auth-error" id="authError2"></div>
+    </div>
+  </div>
+</div>
+
 
 <!-- Share Banner -->
 <div class="share-banner" id="shareBanner">
@@ -705,6 +1026,14 @@ body.mini-mode .card-footer { font-size: 0.65rem; }
     </div>
 
     <div class="sidebar-footer">
+      <div class="sidebar-user" id="sidebarUser">
+        <div class="avatar">📱</div>
+        <div class="info">
+          <div class="phone-num" id="sidebarPhone">未登录</div>
+          <div class="status" id="sidebarStatus">本地模式</div>
+        </div>
+        <button class="logout-btn" id="logoutBtn" style="display:none">退出</button>
+      </div>
       <button class="mini-btn" id="miniBtn">🪟 打开小窗口</button>
       <button class="mini-btn" id="shareBtn">🔗 复制分享链接</button>
     </div>
@@ -769,6 +1098,8 @@ body.mini-mode .card-footer { font-size: 0.65rem; }
 <div class="toast" id="toast"></div>
 
 <script>
+// Firebase 配置和认证逻辑由 firebaseLogic 注入
+
 // ============================================
 // DATA STORE
 // ============================================
