@@ -138,8 +138,12 @@ body::after  { bottom: -20%; right: -5%; width: 60%; height: 60%; background: ra
   text-transform: uppercase; letter-spacing: 0.08em;
   padding: 0 8px; margin-bottom: 24px;
 }
+.sidebar-scroll-area {
+  flex: 1; overflow-y: auto;
+  display: flex; flex-direction: column;
+}
 .project-list {
-  flex: 1; display: flex; flex-direction: column; gap: 4px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 4px;
 }
 .project-list-header {
   font-size: 0.68rem; color: var(--text-dim);
@@ -210,7 +214,13 @@ body::after  { bottom: -20%; right: -5%; width: 60%; height: 60%; background: ra
 }
 .theme-dot:hover { transform: scale(1.12); }
 .theme-dot.active { border-color: var(--text-primary); box-shadow: 0 0 0 3px var(--accent-glow); }
-.sidebar-footer { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.sidebar-footer {
+  margin-top: auto; padding: 12px 0 0;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  position: sticky; bottom: 0;
+}
 .mini-btn {
   display: flex; align-items: center; gap: 6px; padding: 8px 12px;
   border-radius: 8px; cursor: pointer; border: 1px solid var(--border);
@@ -538,16 +548,17 @@ body.mini-mode .card-footer { font-size: 0.65rem; }
     <div class="sidebar-logo">⏳ 关键事件</div>
     <div class="sidebar-subtitle">COUNTDOWN TIMER</div>
     <div class="project-list-header">📁 项目列表</div>
-    <div class="project-list" id="projectList"></div>
-    <button class="add-project-btn" id="addProjectBtn">＋ 新建项目</button>
-
-    <button class="batch-toggle-btn" id="batchToggleBtn">☑ 批量管理</button>
-    <div class="batch-actions" id="batchActions">
-      <div class="batch-row">
-        <button class="btn btn-ghost btn-sm" id="batchSelectAllBtn">全选</button>
-        <button class="btn btn-ghost btn-sm" id="batchDeselectAllBtn">取消全选</button>
+    <div class="sidebar-scroll-area">
+      <div class="project-list" id="projectList"></div>
+      <button class="add-project-btn" id="addProjectBtn">＋ 新建项目</button>
+      <button class="batch-toggle-btn" id="batchToggleBtn">☑ 批量管理</button>
+      <div class="batch-actions" id="batchActions">
+        <div class="batch-row">
+          <button class="btn btn-ghost btn-sm" id="batchSelectAllBtn">全选</button>
+          <button class="btn btn-ghost btn-sm" id="batchDeselectAllBtn">取消全选</button>
+        </div>
+        <button class="btn btn-danger btn-sm" id="batchDeleteBtn">🗑 批量删除选中项目</button>
       </div>
-      <button class="btn btn-danger btn-sm" id="batchDeleteBtn">🗑 批量删除选中项目</button>
     </div>
 
     <div class="theme-section">
