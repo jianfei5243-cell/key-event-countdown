@@ -962,7 +962,10 @@ function addEventToProject(pid) {
 function generateShareUrl() {
   const data = { projects: appData.projects, activeProjectId: appData.activeProjectId };
   const json = JSON.stringify(data);
-  const compressed = btoa(unescape(encodeURIComponent(json)));
+  // Safe UTF-8 base64 encoding via TextEncoder
+  const bytes = new TextEncoder().encode(json);
+  const binary = String.fromCharCode.apply(null, bytes);
+  const compressed = btoa(binary);
   const base = window.location.origin + window.location.pathname;
   return base + '#share=' + compressed;
 }
