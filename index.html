@@ -1008,7 +1008,7 @@ function openRenameProjectModal(id) {
   renamingProjectId = id;
   document.getElementById('projectNameInput').value = project.name;
   document.getElementById('projectModalOverlay').querySelector('h3').textContent = '重命名项目';
-  document.getElementById('projectModalOverlay').classList.add('show');
+  document.getElementById('projectModalOverlay').classList.add('active');
   setTimeout(() => document.getElementById('projectNameInput').focus(), 100);
 }
 
@@ -1016,7 +1016,7 @@ function openCreateProjectModal() {
   renamingProjectId = null;
   document.getElementById('projectNameInput').value = '';
   document.getElementById('projectModalOverlay').querySelector('h3').textContent = '新建项目';
-  document.getElementById('projectModalOverlay').classList.add('show');
+  document.getElementById('projectModalOverlay').classList.add('active');
   setTimeout(() => document.getElementById('projectNameInput').focus(), 100);
 }
 
@@ -1159,23 +1159,32 @@ function bindBatchEvents() {
   document.getElementById('batchToggleBtn').onclick = toggleBatchMode;
 }
 function openProjectModal() {
+  renamingProjectId = null;
   document.getElementById('projectNameInput').value = '';
+  document.getElementById('projectModalOverlay').querySelector('h3').textContent = '新建项目';
   document.getElementById('projectModalOverlay').classList.add('active');
-  document.getElementById('projectNameInput').focus();
+  setTimeout(() => document.getElementById('projectNameInput').focus(), 100);
 }
 function closeProjectModal() {
   document.getElementById('projectModalOverlay').classList.remove('active');
+  renamingProjectId = null;
 }
 function confirmAddProject() {
   const name = document.getElementById('projectNameInput').value.trim();
   if (!name) { toast('⚠️ 请输入项目名称'); return; }
-  const project = { id: uid(), name: name, events: [] };
-  appData.projects.push(project);
-  appData.activeProjectId = project.id;
-  saveData();
+  if (renamingProjectId) {
+    const project = appData.projects.find(p => p.id === renamingProjectId);
+    if (project) { project.name = name; saveData(); toast('✅ 项目已重命名'); }
+    renamingProjectId = null;
+  } else {
+    const project = { id: uid(), name: name, events: [] };
+    appData.projects.push(project);
+    appData.activeProjectId = project.id;
+    saveData();
+    toast('✅ 项目已创建');
+  }
   renderAll();
   closeProjectModal();
-  toast('✅ 项目已创建');
 }
 function renameProject(id, newName) {
   const p = appData.projects.find(p => p.id === id);
