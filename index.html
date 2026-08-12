@@ -542,6 +542,12 @@ body.mini-mode .card-footer { font-size: 0.65rem; }
 </head>
 <body data-theme="midnight">
 
+<!-- Share Banner -->
+<div class="share-banner" id="shareBanner">
+  📎 <strong>查看分享的项目</strong> — 这是来自他人分享的项目数据，不支持编辑和保存。
+  <a onclick="location.hash='';location.reload()">退出分享模式</a>
+</div>
+
 <div class="app-layout">
   <!-- ========== SIDEBAR ========== -->
   <aside class="sidebar">
@@ -649,11 +655,13 @@ let editingEventId = null;
 let batchMode = false;
 let selectedProjects = new Set();
 let expandedMiniSections = new Set();
+let isShareMode = false;
 let lastSaveTime = Date.now();
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 
 function loadData() {
+  if (isShareMode) return; // Don't load from localStorage in share mode
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -960,15 +968,11 @@ function addEventToProject(pid) {
 }
 
 function generateShareUrl() {
+  // Use encodeURIComponent for reliable encoding (no base64 corruption)
   const data = { projects: appData.projects, activeProjectId: appData.activeProjectId };
   const json = JSON.stringify(data);
-  // UTF-8 encode: JSON → bytes
-  var bytes = new TextEncoder().encode(json);
-  var binary = '';
-  for (var i = 0; i < bytes.length; i++) { binary += String.fromCharCode(bytes[i]); }
-  // Standard base64 → URL-safe (no + / =)
-  var b64 = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  var baseUrl = "https://jianfei5243-cell.github.io/key-event-countdown/"; return baseUrl + "#share=" + b64;
+  var baseUrl = "https://jianfei5243-cell.github.io/key-event-countdown/";
+  return baseUrl + "#share=" + encodeURIComponent(json);
 }
 
 function copyShareLink() {
@@ -989,6 +993,83 @@ function switchProject(id) {
   saveData();
   renderAll();
 }
+function loadShare() {
+  var hash = location.hash;
+  if (!hash || hash.indexOf('#share=') !== 0) return;
+  
+  var encoded = hash.substring(7);
+  var json;
+  
+  try {
+    json = decodeURIComponent(encoded);
+  } catch(e1) {
+    try {
+      var b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      var binary = atob(b64);
+      var bytes = [];
+      for (var i = 0; i < binary.length; i++) { bytes.push(binary.charCodeAt(i)); }
+      json = new TextDecoder().decode(new Uint8Array(bytes));
+    } catch(e2) {
+      return;
+    }
+  }
+  
+  try {
+    var d = JSON.parse(json);
+    if (!d.projects || !Array.isArray(d.projects)) return;
+    d.projects.forEach(function(p) { if (!p.events) p.events = []; });
+    
+    isShareMode = true;
+    appData.projects = d.projects;
+    appData.activeProjectId = d.activeProjectId || null;
+    if (!appData.projects.find(function(p) { return p.id === appData.activeProjectId; })) {
+      appData.activeProjectId = appData.projects[0] ? appData.projects[0].id : null;
+    }
+    
+    var banner = document.getElementById('shareBanner');
+    if (banner) banner.classList.add('show');
+    
+    var addProject = document.getElementById('addProjectBtn');
+    var batchToggle = document.getElementById('batchToggleBtn');
+    var batchActions = document.getElementById('batchActions');
+    var shareBtn = document.getElementById('shareBtn');
+    if (addProject) addProject.style.display = 'none';
+    if (batchToggle) batchToggle.style.display = 'none';
+    if (batchActions) batchActions.style.display = 'none';
+    if (shareBtn) shareBtn.textContent = '🚫 退出分享模式';
+  } catch(e) {}
+}
+
+// Hash change listener
+window.addEventListener('hashchange', function() {
+  if (location.hash.indexOf('#share=') === 0) {
+    isShareMode = false;
+    loadData();
+    loadShare();
+    renderAll();
+    bindBatchEvents();
+  } else if (!location.hash) {
+    if (isShareMode) {
+      isShareMode = false;
+      loadData();
+      renderAll();
+      bindBatchEvents();
+      var banner = document.getElementById('shareBanner');
+      if (banner) banner.classList.remove('show');
+      var addProject = document.getElementById('addProjectBtn');
+      var batchToggle = document.getElementById('batchToggleBtn');
+      var batchActions = document.getElementById('batchActions');
+      var shareBtn = document.getElementById('shareBtn');
+      if (addProject) addProject.style.display = '';
+      if (batchToggle) batchToggle.style.display = '';
+      if (batchActions && !batchMode) batchActions.style.display = 'none';
+      if (shareBtn) shareBtn.textContent = '🔗 复制分享链接';
+    }
+  }
+});
+
+
 
 // ============================================
 // BATCH MODE
@@ -1209,7 +1290,29 @@ function checkReminders() {
 // ============================================
 document.getElementById('addProjectBtn').onclick = openProjectModal;
 document.getElementById('miniBtn').onclick = openMini;
-document.getElementById('shareBtn').onclick = copyShareLink;
+document.getElementById('shareBtn').onclick = function() {
+  if (isShareMode) {
+    // Exit share mode
+    location.hash = '';
+    isShareMode = false;
+    loadData();
+    renderAll();
+    bindBatchEvents();
+    var banner = document.getElementById('shareBanner');
+    if (banner) banner.classList.remove('show');
+    var addProject = document.getElementById('addProjectBtn');
+    var batchToggle = document.getElementById('batchToggleBtn');
+    var batchActions = document.getElementById('batchActions');
+    var shareBtn = document.getElementById('shareBtn');
+    if (addProject) addProject.style.display = '';
+    if (batchToggle) batchToggle.style.display = '';
+    if (batchActions && !batchMode) batchActions.style.display = 'none';
+    if (shareBtn) shareBtn.textContent = '🔗 复制分享链接';
+    toast('已退出分享模式');
+  } else {
+    copyShareLink();
+  }
+};
 
 // Project modal
 document.getElementById('projectModalCancelBtn').onclick = closeProjectModal;
@@ -1243,6 +1346,7 @@ setTimeout(() => { if (Notification.permission==='default') Notification.request
 // START
 // ============================================
 loadTheme();
+loadShare();
 loadData();
 renderAll();
 bindBatchEvents();
