@@ -1246,6 +1246,11 @@ loadTheme();
 loadData();
 renderAll();
 bindBatchEvents();
+// Show share debug info if any
+if (window._shareDebug) {
+  var el = document.getElementById('shareDebug');
+  if (el) el.textContent = '诊断: ' + window._shareDebug;
+}
 
 // Cross-window sync: listen for storage changes from mini/main window
 window.addEventListener('storage', function(e) {
