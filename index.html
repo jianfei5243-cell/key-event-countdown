@@ -330,8 +330,17 @@ body::after  { bottom: -20%; right: -5%; width: 60%; height: 60%; background: ra
 
 /* Theme picker */
 .theme-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
-.theme-section-label { font-size: 0.68rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700; padding: 0 8px 10px; }
-.theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 8px; }
+.theme-section-label {
+  font-size: 0.68rem; color: var(--text-dim); text-transform: uppercase;
+  letter-spacing: 0.07em; font-weight: 700; padding: 0 8px 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
+}
+.theme-section-label:hover { color: var(--text-secondary); }
+.theme-arrow { font-size: 0.6rem; transition: transform 0.2s; color: var(--text-dim); }
+.theme-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 8px; }
+.theme-section.open .theme-grid { display: grid; }
+.theme-section.open .theme-arrow { transform: rotate(180deg); }
 .theme-dot {
   width: 100%; aspect-ratio: 1; border-radius: 50%; cursor: pointer;
   border: 3px solid transparent; transition: all 0.2s; position: relative;
@@ -751,8 +760,11 @@ body.mini-mode .card-footer { font-size: 0.65rem; }
       </div>
     </div>
 
-    <div class="theme-section">
-      <div class="theme-section-label">🎨 主题配色</div>
+    <div class="theme-section" id="themeSection">
+      <div class="theme-section-label" id="themeToggle">
+        <span>🎨 主题配色</span>
+        <span class="theme-arrow">▼</span>
+      </div>
       <div class="theme-grid">
         <div class="theme-dot active" style="background:linear-gradient(135deg,#6366f1,#0b0d1a)" data-theme="midnight" title="深蓝夜空"></div>
         <div class="theme-dot" style="background:linear-gradient(135deg,#a855f7,#120c1e)" data-theme="purple" title="紫梦星河"></div>
@@ -1775,6 +1787,9 @@ document.getElementById('modalSaveBtn').onclick = saveEvent;
 document.getElementById('modalOverlay').onclick = function(e) { if (e.target===this) closeEventModal(); };
 
 // Theme dots
+document.getElementById('themeToggle').onclick = function() {
+  document.getElementById('themeSection').classList.toggle('open');
+};
 document.querySelectorAll('.theme-dot').forEach(dot => {
   dot.onclick = function() { setTheme(this.dataset.theme); };
 });
