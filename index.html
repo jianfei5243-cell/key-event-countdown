@@ -512,6 +512,23 @@ body::after  { bottom: -20%; right: -5%; width: 60%; height: 60%; background: ra
 .import-preview ul { margin: 6px 0 0; padding-left: 18px; }
 .import-preview li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .event-card.active { border-color: var(--accent); }
+.event-card.has-color { border-left: 4px solid var(--event-color); }
+.event-card.has-color .event-name { color: var(--event-color); }
+.event-card.has-color .period-banner { border-color: var(--event-color); }
+.event-card.has-color .period-duration { background: var(--event-color); }
+.event-card.has-color .period-title { color: var(--event-color); }
+.color-picker { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.color-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid transparent; cursor: pointer; padding: 0;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.color-dot.active { border-color: var(--text-primary); box-shadow: 0 0 0 3px var(--accent-glow); transform: scale(1.12); }
+.color-dot:hover { transform: scale(1.08); }
+.color-input-custom {
+  width: 30px; height: 30px; border: none; padding: 0; background: none;
+  cursor: pointer; border-radius: 6px;
+}
 
 /* ============================================
    Modal Overlays (must be OUTSIDE app-layout)
@@ -796,6 +813,20 @@ body.mini-mode .card-footer { font-size: 0.65rem; }
         <option value="10080">提前 1 周</option>
       </select>
     </div>
+    <div class="form-group">
+      <label>事件颜色</label>
+      <div class="color-picker" id="eventColorPicker">
+        <button type="button" class="color-dot active" data-color="" style="background:var(--accent)" title="默认主题色"></button>
+        <button type="button" class="color-dot" data-color="#ef4444" style="background:#ef4444" title="红色"></button>
+        <button type="button" class="color-dot" data-color="#f97316" style="background:#f97316" title="橙色"></button>
+        <button type="button" class="color-dot" data-color="#eab308" style="background:#eab308" title="黄色"></button>
+        <button type="button" class="color-dot" data-color="#22c55e" style="background:#22c55e" title="绿色"></button>
+        <button type="button" class="color-dot" data-color="#3b82f6" style="background:#3b82f6" title="蓝色"></button>
+        <button type="button" class="color-dot" data-color="#a855f7" style="background:#a855f7" title="紫色"></button>
+        <button type="button" class="color-dot" data-color="#ec4899" style="background:#ec4899" title="粉色"></button>
+        <input type="color" class="color-input-custom" id="eventColorInput" value="#6366f1" title="自定义颜色">
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost btn-sm" id="modalCancelBtn">取消</button>
       <button class="btn btn-primary btn-sm" id="modalSaveBtn">保存</button>
@@ -849,6 +880,7 @@ const THEME_KEY = 'countdown_timer_theme';
 
 let appData = { projects: [], activeProjectId: null };
 let editingEventId = null;
+let editingEventColor = '';
 let batchMode = false;
 let selectedProjects = new Set();
 let expandedMiniSections = new Set();
@@ -1066,48 +1098,12 @@ function card(ev) {
   const status = eventStatus(ev);
   const past = status === 'past';
   const active = status === 'active';
-  const target = status === 'upcoming' ? ev.start : ev.end;
-  const c = past ? { days:0, hours:0, mins:0, secs:0, past:true } : cd(target);
-  const u = past ? 'past' : urgency(target);
-  const r = ring(target);
-
-  const ringCenterLabel = past ? '已结束' : (active ? '距结束' : '距开始');
-  const ringBig = past ? '—' : c.days;
-
-  const ringH = past ? `
-    <div class="countdown-ring-wrap"><div class="countdown-ring">
-      <svg class="ring-svg" viewBox="0 0 140 140">
-        <circle class="ring-track" cx="70" cy="70" r="60"/>
-        <circle class="ring-progress" cx="70" cy="70" r="60" stroke-dasharray="${r.circ}" stroke-dashoffset="${r.circ}" opacity="0.3"/>
-      </svg>
-      <div class="ring-center"><div class="big-num" style="color:var(--text-dim)">—</div><div class="big-label">已结束</div></div>
-    </div></div>` : `
-    <div class="countdown-ring-wrap"><div class="countdown-ring">
-      <svg class="ring-svg" viewBox="0 0 140 140">
-        <circle class="ring-track" cx="70" cy="70" r="60"/>
-        <circle class="ring-progress" cx="70" cy="70" r="60" stroke-dasharray="${r.circ}" stroke-dashoffset="${r.offset}"/>
-      </svg>
-      <div class="ring-center"><div class="big-num">${ringBig}</div><div class="big-label">${ringCenterLabel}</div></div>
-    </div></div>`;
-
-  const split = past ? `
-    <div class="countdown-split">
-      <div class="countdown-unit"><div class="countdown-num">—</div><div class="countdown-label">天</div></div>
-      <div class="countdown-unit"><div class="countdown-num">—</div><div class="countdown-label">时</div></div>
-      <div class="countdown-unit"><div class="countdown-num">—</div><div class="countdown-label">分</div></div>
-      <div class="countdown-unit"><div class="countdown-num">—</div><div class="countdown-label">秒</div></div>
-    </div>` : `
-    <div class="countdown-split">
-      <div class="countdown-unit"><div class="countdown-num">${c.days}</div><div class="countdown-label">天</div></div>
-      <div class="countdown-unit"><div class="countdown-num">${String(c.hours).padStart(2,'0')}</div><div class="countdown-label">时</div></div>
-      <div class="countdown-unit"><div class="countdown-num">${String(c.mins).padStart(2,'0')}</div><div class="countdown-label">分</div></div>
-      <div class="countdown-unit"><div class="countdown-num">${String(c.secs).padStart(2,'0')}</div><div class="countdown-label">秒</div></div>
-    </div>`;
-
   const statusText = past ? '✅ 已结束' : (active ? '⏳ 进行中' : '🔜 未开始');
+  const colorAttr = ev.color ? ` style="--event-color:${ev.color}"` : '';
+  const colorClass = ev.color ? ' has-color' : '';
 
   return `
-    <div class="event-card urgency-${u}${past?' past':''}${active?' active':''}" data-eid="${ev.id}">
+    <div class="event-card${colorClass}${past?' past':''}${active?' active':''}" data-eid="${ev.id}"${colorAttr}>
       <div class="card-top">
         <div class="event-name">${esc(ev.name)}</div>
         <div class="card-actions">
@@ -1120,7 +1116,6 @@ function card(ev) {
         <span class="period-range">${fmtDT(ev.start)} → ${fmtDT(ev.end)}</span>
         <span class="period-duration">持续 ${fmtDuration(ev.start, ev.end)}</span>
       </div>
-      ${ringH}${split}
       <div class="card-footer">
         <span class="reminder-badge">🔔 ${fmtRem(ev.reminder)}</span>
         <span class="status-badge status-${status}">${statusText}</span>
@@ -1462,6 +1457,7 @@ function openEventModal(eid) {
       document.getElementById('eventStartInput').value = ev.start || '';
       document.getElementById('eventEndInput').value = ev.end || '';
       document.getElementById('eventReminderInput').value = ev.reminder;
+      editingEventColor = ev.color || '';
     }
   } else {
     document.getElementById('eventNameInput').value = '';
@@ -1470,7 +1466,9 @@ function openEventModal(eid) {
     document.getElementById('eventStartInput').value = toLocalInput(s);
     document.getElementById('eventEndInput').value = toLocalInput(e);
     document.getElementById('eventReminderInput').value = '1440';
+    editingEventColor = '';
   }
+  syncColorPickerUI();
   document.getElementById('eventNameInput').focus();
 }
 function closeEventModal() {
@@ -1497,9 +1495,9 @@ function saveEvent() {
 
   if (editingEventId) {
     const ev = project.events.find(e => e.id === editingEventId);
-    if (ev) { ev.name = name; ev.start = start; ev.end = end; ev.reminder = reminder; }
+    if (ev) { ev.name = name; ev.start = start; ev.end = end; ev.reminder = reminder; ev.color = editingEventColor || ''; }
   } else {
-    project.events.push({ id: uid(), name, start, end, reminder });
+    project.events.push({ id: uid(), name, start, end, reminder, color: editingEventColor || '' });
   }
   project.events.sort((a,b) => new Date(a.start) - new Date(b.start));
   saveData(); renderAll(); closeEventModal();
@@ -1641,7 +1639,7 @@ document.getElementById('excelFileInput').onchange = function(e) {
         const start = parseExcelDate(row[startCol]);
         const end = parseExcelDate(row[endCol]);
         if (!start || !end) continue;
-        events.push({ id: uid(), name, start, end, reminder: 1440 });
+        events.push({ id: uid(), name, start, end, reminder: 1440, color: '' });
       }
 
       if (events.length === 0) { toast('⚠️ 未识别到有效事件，请检查日期格式'); return; }
@@ -1666,6 +1664,35 @@ document.getElementById('importConfirmBtn').onclick = function() {
   project.events.sort((a,b) => new Date(a.start) - new Date(b.start));
   saveData(); renderAll(); bindEvents(); closeImportModal();
   toast(`✅ 已导入 ${importPendingEvents.length} 个事件到「${project.name}」`);
+};
+
+// ============================================
+// EVENT COLOR PICKER
+// ============================================
+function syncColorPickerUI() {
+  const dots = document.querySelectorAll('#eventColorPicker .color-dot');
+  dots.forEach(dot => {
+    dot.classList.toggle('active', (dot.dataset.color || '') === editingEventColor);
+  });
+  const customInput = document.getElementById('eventColorInput');
+  if (customInput) {
+    if (editingEventColor && !Array.from(dots).some(d => (d.dataset.color || '') === editingEventColor)) {
+      customInput.value = editingEventColor;
+    }
+  }
+}
+
+document.querySelectorAll('#eventColorPicker .color-dot').forEach(dot => {
+  dot.onclick = function() {
+    editingEventColor = this.dataset.color || '';
+    syncColorPickerUI();
+  };
+});
+
+document.getElementById('eventColorInput').oninput = function() {
+  editingEventColor = this.value;
+  const dots = document.querySelectorAll('#eventColorPicker .color-dot');
+  dots.forEach(dot => dot.classList.remove('active'));
 };
 
 // ============================================
