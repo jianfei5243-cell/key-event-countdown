@@ -471,11 +471,19 @@ body::after  { bottom: -20%; right: -5%; width: 60%; height: 60%; background: ra
   padding: 3px 10px; border-radius: 20px; font-size: 0.68rem; font-weight: 600;
   background: var(--accent-glow); color: var(--accent2); letter-spacing: 0.02em;
 }
-.cycle-badge {
+.period-row { display: flex; gap: 10px; }
+.period-item { flex: 1; }
+.period-item .period-label { display: block; font-size: 0.7rem; color: var(--text-dim); margin-bottom: 4px; }
+.period-item input { width: 100%; }
+.status-badge {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 10px; border-radius: 20px; font-size: 0.68rem; font-weight: 600;
   background: var(--accent-glow); color: var(--accent); letter-spacing: 0.02em;
 }
+.status-badge.status-upcoming { background: var(--accent-glow); color: var(--accent); }
+.status-badge.status-active { background: rgba(250,204,21,0.15); color: var(--warn); }
+.status-badge.status-past { background: rgba(248,113,113,0.12); color: var(--danger); }
+.event-card.active { border-color: var(--accent); }
 
 /* ============================================
    Modal Overlays (must be OUTSIDE app-layout)
@@ -730,18 +738,17 @@ body.mini-mode .card-footer { font-size: 0.65rem; }
       <textarea id="eventNameInput" placeholder="输入关键事件名称（不限长度）..."></textarea>
     </div>
     <div class="form-group">
-      <label>截止时间</label>
-      <input type="datetime-local" id="eventDeadlineInput">
-    </div>
-    <div class="form-group">
-      <label>重复周期</label>
-      <select id="eventCycleInput">
-        <option value="none" selected>不重复（一次性）</option>
-        <option value="daily">每天</option>
-        <option value="weekly">每周</option>
-        <option value="monthly">每月</option>
-        <option value="yearly">每年</option>
-      </select>
+      <label>测试周期</label>
+      <div class="period-row">
+        <div class="period-item">
+          <span class="period-label">开始时间</span>
+          <input type="datetime-local" id="eventStartInput">
+        </div>
+        <div class="period-item">
+          <span class="period-label">结束时间</span>
+          <input type="datetime-local" id="eventEndInput">
+        </div>
+      </div>
     </div>
     <div class="form-group">
       <label>提前提醒</label>
@@ -808,7 +815,7 @@ function loadData() {
       const d = JSON.parse(raw);
       appData.projects = d.projects || [];
       appData.activeProjectId = d.activeProjectId || null;
-      appData.projects.forEach(p => { if (!p.events) p.events = []; });
+      appData.projects.forEach(p => { if (!p.events) p.events = []; p.events.forEach(normalizeEvent); });
     }
   } catch(e) { appData = { projects: [], activeProjectId: null }; }
 
@@ -949,30 +956,33 @@ function toLocalInput(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
-// Get the next upcoming deadline for recurring events
-function effectiveDeadline(ev) {
-  if (!ev.cycle || ev.cycle === 'none') return ev.deadline;
-  let d = new Date(ev.deadline);
+// Determine current status of a test period event
+function eventStatus(ev) {
   const now = Date.now();
-  let guard = 0;
-  while (d.getTime() < now && guard < 5000) {
-    if (ev.cycle === 'daily') d.setDate(d.getDate() + 1);
-    else if (ev.cycle === 'weekly') d.setDate(d.getDate() + 7);
-    else if (ev.cycle === 'monthly') d.setMonth(d.getMonth() + 1);
-    else if (ev.cycle === 'yearly') d.setFullYear(d.getFullYear() + 1);
-    guard++;
-  }
-  return toLocalInput(d);
+  const st = new Date(ev.start).getTime();
+  const et = new Date(ev.end).getTime();
+  if (now < st) return 'upcoming';
+  if (now <= et) return 'active';
+  return 'past';
 }
 
-function fmtCycle(cycle) {
-  switch(cycle) {
-    case 'daily': return '每天';
-    case 'weekly': return '每周';
-    case 'monthly': return '每月';
-    case 'yearly': return '每年';
-    default: return '';
+// Migrate legacy events (deadline/cycle) to start/end period model
+function normalizeEvent(ev) {
+  if (!ev.start || !ev.end) {
+    if (ev.deadline) {
+      ev.end = ev.deadline;
+      const d = new Date(ev.deadline);
+      d.setHours(0, 0, 0, 0);
+      ev.start = toLocalInput(d);
+    } else {
+      const n = Date.now();
+      ev.start = toLocalInput(new Date(n));
+      ev.end = toLocalInput(new Date(n + 86400000));
+    }
   }
+  delete ev.deadline;
+  delete ev.cycle;
+  return ev;
 }
 
 function fmtDT(iso) {
@@ -995,12 +1005,16 @@ function ring(dl) {
 }
 
 function card(ev) {
-  const dl = effectiveDeadline(ev);
-  const c = cd(dl);
-  const u = urgency(dl);
-  const r = ring(dl);
-  const past = c.past;
-  const isRecurring = ev.cycle && ev.cycle !== 'none';
+  const status = eventStatus(ev);
+  const past = status === 'past';
+  const active = status === 'active';
+  const target = status === 'upcoming' ? ev.start : ev.end;
+  const c = past ? { days:0, hours:0, mins:0, secs:0, past:true } : cd(target);
+  const u = past ? 'past' : urgency(target);
+  const r = ring(target);
+
+  const ringCenterLabel = past ? '已结束' : (active ? '距结束' : '距开始');
+  const ringBig = past ? '—' : c.days;
 
   const ringH = past ? `
     <div class="countdown-ring-wrap"><div class="countdown-ring">
@@ -1008,14 +1022,14 @@ function card(ev) {
         <circle class="ring-track" cx="70" cy="70" r="60"/>
         <circle class="ring-progress" cx="70" cy="70" r="60" stroke-dasharray="${r.circ}" stroke-dashoffset="${r.circ}" opacity="0.3"/>
       </svg>
-      <div class="ring-center"><div class="big-num" style="color:var(--text-dim)">—</div><div class="big-label">已过期</div></div>
+      <div class="ring-center"><div class="big-num" style="color:var(--text-dim)">—</div><div class="big-label">已结束</div></div>
     </div></div>` : `
     <div class="countdown-ring-wrap"><div class="countdown-ring">
       <svg class="ring-svg" viewBox="0 0 140 140">
         <circle class="ring-track" cx="70" cy="70" r="60"/>
         <circle class="ring-progress" cx="70" cy="70" r="60" stroke-dasharray="${r.circ}" stroke-dashoffset="${r.offset}"/>
       </svg>
-      <div class="ring-center"><div class="big-num">${c.days}</div><div class="big-label">天</div></div>
+      <div class="ring-center"><div class="big-num">${ringBig}</div><div class="big-label">${ringCenterLabel}</div></div>
     </div></div>`;
 
   const split = past ? `
@@ -1032,8 +1046,10 @@ function card(ev) {
       <div class="countdown-unit"><div class="countdown-num">${String(c.secs).padStart(2,'0')}</div><div class="countdown-label">秒</div></div>
     </div>`;
 
+  const statusText = past ? '✅ 已结束' : (active ? '⏳ 进行中' : '🔜 未开始');
+
   return `
-    <div class="event-card urgency-${u}${past?' past':''}" data-eid="${ev.id}">
+    <div class="event-card urgency-${u}${past?' past':''}${active?' active':''}" data-eid="${ev.id}">
       <div class="card-top">
         <div class="event-name">${esc(ev.name)}</div>
         <div class="card-actions">
@@ -1043,9 +1059,9 @@ function card(ev) {
       </div>
       ${ringH}${split}
       <div class="card-footer">
-        <span class="deadline-text">📅 ${isRecurring ? '下次 ' : ''}${fmtDT(dl)}</span>
+        <span class="deadline-text">📅 ${fmtDT(ev.start)} → ${fmtDT(ev.end)}</span>
         <span class="reminder-badge">🔔 ${fmtRem(ev.reminder)}</span>
-        ${isRecurring ? `<span class="cycle-badge">🔄 ${fmtCycle(ev.cycle)}</span>` : ''}
+        <span class="status-badge status-${status}">${statusText}</span>
       </div>
     </div>`;
 }
@@ -1212,7 +1228,7 @@ function loadShare() {
   try {
     var d = JSON.parse(json);
     if (!d.projects || !Array.isArray(d.projects)) return;
-    d.projects.forEach(function(p) { if (!p.events) p.events = []; });
+    d.projects.forEach(function(p) { if (!p.events) p.events = []; p.events.forEach(normalizeEvent); });
     
     isShareMode = true;
     appData.projects = d.projects;
@@ -1381,16 +1397,16 @@ function openEventModal(eid) {
     }
     if (ev) {
       document.getElementById('eventNameInput').value = ev.name;
-      document.getElementById('eventDeadlineInput').value = ev.deadline;
-      document.getElementById('eventCycleInput').value = ev.cycle || 'none';
+      document.getElementById('eventStartInput').value = ev.start || '';
+      document.getElementById('eventEndInput').value = ev.end || '';
       document.getElementById('eventReminderInput').value = ev.reminder;
     }
   } else {
     document.getElementById('eventNameInput').value = '';
-    const d = new Date(Date.now() + 3*86400000);
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    document.getElementById('eventDeadlineInput').value = d.toISOString().slice(0,16);
-    document.getElementById('eventCycleInput').value = 'none';
+    const s = new Date(Date.now() + 3*86400000);
+    const e = new Date(Date.now() + 4*86400000);
+    document.getElementById('eventStartInput').value = toLocalInput(s);
+    document.getElementById('eventEndInput').value = toLocalInput(e);
     document.getElementById('eventReminderInput').value = '1440';
   }
   document.getElementById('eventNameInput').focus();
@@ -1410,19 +1426,20 @@ function saveEvent() {
     }
   }
   const name = document.getElementById('eventNameInput').value.trim();
-  const deadline = document.getElementById('eventDeadlineInput').value;
-  const cycle = document.getElementById('eventCycleInput').value || 'none';
+  const start = document.getElementById('eventStartInput').value;
+  const end = document.getElementById('eventEndInput').value;
   const reminder = parseInt(document.getElementById('eventReminderInput').value);
   if (!name) { toast('⚠️ 请输入事件名称'); return; }
-  if (!deadline) { toast('⚠️ 请选择截止时间'); return; }
+  if (!start || !end) { toast('⚠️ 请选择测试周期的开始和结束时间'); return; }
+  if (end < start) { toast('⚠️ 结束时间不能早于开始时间'); return; }
 
   if (editingEventId) {
     const ev = project.events.find(e => e.id === editingEventId);
-    if (ev) { ev.name = name; ev.deadline = deadline; ev.cycle = cycle; ev.reminder = reminder; }
+    if (ev) { ev.name = name; ev.start = start; ev.end = end; ev.reminder = reminder; }
   } else {
-    project.events.push({ id: uid(), name, deadline, cycle, reminder });
+    project.events.push({ id: uid(), name, start, end, reminder });
   }
-  project.events.sort((a,b) => new Date(a.deadline) - new Date(b.deadline));
+  project.events.sort((a,b) => new Date(a.start) - new Date(b.start));
   saveData(); renderAll(); closeEventModal();
   toast(editingEventId ? '✅ 事件已更新' : '✅ 事件已添加');
 }
@@ -1471,22 +1488,32 @@ function checkReminders() {
   const now = Date.now();
   appData.projects.forEach(proj => {
     proj.events.forEach(ev => {
-      const dt = new Date(effectiveDeadline(ev)).getTime();
-      const rt = dt - ev.reminder*60000;
+      const st = new Date(ev.start).getTime();
+      const et = new Date(ev.end).getTime();
+      const rt = st - ev.reminder*60000;
 
       if (now >= rt && now < rt+60000 && !notified[ev.id+'-r']) {
         notified[ev.id+'-r'] = true;
-        const c = cd(effectiveDeadline(ev));
-        const msg = c.past ? `「${ev.name}」已过期` : `「${ev.name}」还剩 ${c.days}天${c.hours}时${c.mins}分`;
-        if (Notification.permission === 'granted') new Notification('⏰ 事件提醒', {body:msg});
+        const c = cd(ev.start);
+        const msg = `「${ev.name}」将在 ${c.days}天${c.hours}时${c.mins}分后开始`;
+        if (Notification.permission === 'granted') new Notification('⏰ 测试周期提醒', {body:msg});
         toast('⏰ '+msg);
       }
-      if (now >= dt && now < dt+60000 && !notified[ev.id+'-d']) {
-        notified[ev.id+'-d'] = true;
-        if (Notification.permission === 'granted') new Notification('🔴 事件截止', {body:`「${ev.name}」已截止！`});
+      if (now >= st && now < st+60000 && !notified[ev.id+'-s']) {
+        notified[ev.id+'-s'] = true;
+        const msg = `「${ev.name}」已开始`;
+        if (Notification.permission === 'granted') new Notification('🔔 测试开始', {body:msg});
+        toast('🔔 '+msg);
+      }
+      if (now >= et && now < et+60000 && !notified[ev.id+'-e']) {
+        notified[ev.id+'-e'] = true;
+        const msg = `「${ev.name}」已结束`;
+        if (Notification.permission === 'granted') new Notification('✅ 测试结束', {body:msg});
+        toast('✅ '+msg);
       }
       if (now < rt-120000) delete notified[ev.id+'-r'];
-      if (now < dt-120000) delete notified[ev.id+'-d'];
+      if (now < st-120000) delete notified[ev.id+'-s'];
+      if (now < et-120000) delete notified[ev.id+'-e'];
     });
   });
 }
